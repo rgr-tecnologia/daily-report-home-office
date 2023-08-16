@@ -1,0 +1,41 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/spfx-serve.schema.json",
+  "port": 4321,
+  "https": true,
+  "serveConfigurations": {
+    "default": {
+      "pageUrl": "https://cjinter.sharepoint.com/sites/newportal/_layouts/15/SPListForm.aspx",
+      "formCustomizer": {
+        "componentId": "4a7f9032-8e66-421e-bafe-a1e03d0c4fb7",
+        "PageType": 8,
+        "RootFolder": "/sites/mySite/Lists/DailyReportHomeOffice"
+      }
+    },
+    "dailyReportHomeOffice_NewForm": {
+      "pageUrl": "https://cjinter.sharepoint.com/sites/newportal/_layouts/15/SPListForm.aspx",
+      "formCustomizer": {
+        "componentId": "4a7f9032-8e66-421e-bafe-a1e03d0c4fb7",
+        "PageType": 8,
+        "RootFolder": "/sites/mySite/Lists/DailyReportHomeOffice"
+      }
+    },
+    "dailyReportHomeOffice_EditForm": {
+      "pageUrl": "https://cjinter.sharepoint.com/sites/newportal/_layouts/15/SPListForm.aspx",
+      "formCustomizer": {
+        "componentId": "4a7f9032-8e66-421e-bafe-a1e03d0c4fb7",
+        "PageType": 6,
+        "RootFolder": "/sites/mySite/Lists/DailyReportHomeOffice",
+        "ID": 1
+      }
+    },
+    "dailyReportHomeOffice_ViewForm": {
+      "pageUrl": "https://cjinter.sharepoint.com/sites/newportal/_layouts/15/SPListForm.aspx",
+      "formCustomizer": {
+        "componentId": "4a7f9032-8e66-421e-bafe-a1e03d0c4fb7",
+        "PageType": 4,
+        "RootFolder": "/sites/mySite/Lists/DailyReportHomeOffice",
+        "ID": 1
+      }
+    }
+  }
+}

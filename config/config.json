@@ -1,0 +1,18 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/config.2.0.schema.json",
+  "version": "2.0",
+  "bundles": {
+    "daily-report-home-office-form-customizer": {
+      "components": [
+        {
+          "entrypoint": "./lib/extensions/dailyReportHomeOffice/DailyReportHomeOfficeFormCustomizer.js",
+          "manifest": "./src/extensions/dailyReportHomeOffice/DailyReportHomeOfficeFormCustomizer.manifest.json"
+        }
+      ]
+    }
+  },
+  "externals": {},
+  "localizedResources": {
+    "DailyReportHomeOfficeFormCustomizerStrings": "lib/extensions/dailyReportHomeOffice/loc/{locale}.js"
+  }
+}

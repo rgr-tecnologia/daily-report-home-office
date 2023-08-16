@@ -1,0 +1,22 @@
+{
+  "@microsoft/generator-sharepoint": {
+    "plusBeta": false,
+    "isCreatingSolution": true,
+    "nodeVersion": "16.16.0",
+    "sdksVersions": {
+      "@microsoft/microsoft-graph-client": "3.0.2",
+      "@microsoft/teams-js": "2.4.1"
+    },
+    "version": "1.16.0",
+    "libraryName": "daily-report-home-office",
+    "libraryId": "bc67daff-c44b-4a1b-9f32-52e5ca0d911f",
+    "environment": "spo",
+    "packageManager": "npm",
+    "solutionName": "DailyReportHomeOffice",
+    "solutionShortDescription": "DailyReportHomeOffice description",
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "componentType": "extension",
+    "extensionType": "FormCustomizer"
+  }
+}
