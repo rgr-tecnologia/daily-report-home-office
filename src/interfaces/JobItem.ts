@@ -11,6 +11,7 @@ export interface ResponseJobItem {
     HomeOffice: boolean;
     HoraInicio: string;
     HoraFim: string;
+    "@odata.etag": string
 }
 
 export interface JobItemDto {
@@ -24,4 +25,5 @@ export interface JobItemDto {
     HomeOffice: boolean;
     HoraInicio: Date;
     HoraFim: Date;
+    Tag?: string
 }

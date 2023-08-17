@@ -10,16 +10,20 @@ import { Form } from './Form/Form';
 
 export function DailyReportHomeOffice(props: DailyReportHomeOfficeProps): JSX.Element {
   const {
-    employee, 
-    date, 
-    manager,
-    items,
     onSave,
+    employee,
+    manager,
     isManager,
-    isEmployee
+    isEmployee,
+    formData,
   } = props
 
-  const [jobItems, setJobItems] = React.useState<JobItemDto[]>(items)
+  const {
+    JobDate,
+    Status
+  } = formData
+
+  const [jobItems, setJobItems] = React.useState<JobItemDto[]>(formData.items)
 
   const onAddJobItem = (jobItem: JobItemDto): void => setJobItems([...jobItems, jobItem])
 
@@ -33,11 +37,9 @@ export function DailyReportHomeOffice(props: DailyReportHomeOfficeProps): JSX.El
 
   const onSaveDraft = (): void => {
     const FormData: DailyReportDto = {
-      Id: null,
-      EmployeeId: employee.Id,
-      ManagerId: manager.Id,
+      ...formData,
       Status: 'Draft',
-      items: jobItems
+      items: jobItems,
     }
 
     onSave(FormData)
@@ -45,9 +47,7 @@ export function DailyReportHomeOffice(props: DailyReportHomeOfficeProps): JSX.El
 
   const onSaveAndSend = (): void => {
     const FormData: DailyReportDto = {
-      Id: null,
-      EmployeeId: employee.Id,
-      ManagerId: manager.Id,
+      ...formData,
       Status: 'In review',
       items: jobItems
     }
@@ -57,9 +57,7 @@ export function DailyReportHomeOffice(props: DailyReportHomeOfficeProps): JSX.El
 
   const onSaveAndFinish = (): void => {
     const FormData: DailyReportDto = {
-      Id: null,
-      EmployeeId: employee.Id,
-      ManagerId: manager.Id,
+      ...formData,
       Status: 'Reviewed',
       items: jobItems
     }
@@ -71,19 +69,21 @@ export function DailyReportHomeOffice(props: DailyReportHomeOfficeProps): JSX.El
     <Stack>
       <Text style={{color: 'red'}}> Disclaimer genérico</Text>
       <Form 
+        date={JobDate}
         employee={employee}
-        date={date}
         manager={manager}
+        isManager={isManager}
+        isEmployee={isEmployee}
+        status={Status}
         onAddJobItem={onAddJobItem} 
         onSaveDraft={onSaveDraft}
         onSaveAndSend={onSaveAndSend}
-        onSaveAndFinish={onSaveAndFinish}
-        isManager={isManager}
-        isEmployee={isEmployee}/>
+        onSaveAndFinish={onSaveAndFinish}/>
       <JobList
         items={formatJobItemsDateProperties(jobItems)}
         isManager={isManager}
-        isEmployee={isEmployee}/>
+        isEmployee={isEmployee}
+        status={Status}/>
     </Stack>
   );
 }

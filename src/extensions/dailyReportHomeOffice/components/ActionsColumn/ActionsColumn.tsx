@@ -4,9 +4,10 @@ import { ActionsColumnProps } from './ActionsColumn.props';
 
 export function ActionsColumn(props: ActionsColumnProps): JSX.Element {
     const {
-        isManager
+        isEmployee,
+        isManager,
+        status
     } = props
-    
     const styles = {
         fontSize: '1rem'
     }
@@ -15,10 +16,18 @@ export function ActionsColumn(props: ActionsColumnProps): JSX.Element {
         tokens={{
             childrenGap: 'm'
         }}>
-        {isManager &&
-            <>
-                <FontIcon iconName="Accept" style={styles}/>
-                <FontIcon iconName="Cancel" style={styles}/>
-            </>}
+        {
+            isEmployee && status === 'Draft' && (
+                <>
+                    <FontIcon iconName="Edit" style={styles}/>
+                </>
+            ) ||
+            isManager && status === 'In review' && (
+                <>
+                    <FontIcon iconName="Accept" style={styles}/>
+                    <FontIcon iconName="Cancel" style={styles}/>
+                </>
+            )
+        }
     </Stack>
 }

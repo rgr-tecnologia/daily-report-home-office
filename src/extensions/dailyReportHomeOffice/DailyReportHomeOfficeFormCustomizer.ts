@@ -34,6 +34,14 @@ export default class DailyReportHomeOfficeFormCustomizer
   dailyReportListId = 'abe0a217-2715-4450-adc7-841cb33431d4'
   dailyReportItemsListId = 'c5f255aa-ed5d-418e-b2af-d7d48ddbf0fb'
 
+  formData: DailyReportDto = {
+    EmployeeId: null,
+    ManagerId: null,
+    Status: 'Draft',
+    JobDate: new Date(),
+    items: [],
+  }
+
   employeeProfile: Profile
   managerProfile: Profile
 
@@ -41,7 +49,6 @@ export default class DailyReportHomeOfficeFormCustomizer
   isManager: boolean
 
   items: JobItemDto[]
-  initialDate: Date
 
   public async onInit(): Promise<void> {
     // Add your custom initialization to this method. The framework will wait
@@ -60,16 +67,14 @@ export default class DailyReportHomeOfficeFormCustomizer
       return Promise.resolve();
     }
     else {
-      const item = await this.getItemsFromMainList(this.context.item.ID)
-      this.initialDate = new Date(item.CreatedAt)
+      this.formData = await this.getItemsFromMainList(this.context.item.ID)
+      this.formData.items = await this.getItemsFromSecondaryList(this.formData.Id)
       
-      this.employeeProfile = await this.getDataFromHierarquia({Id: item.EmployeeId})
-      this.managerProfile = await this.getDataFromHierarquia({Id: item.ManagerId})
+      this.employeeProfile = await this.getDataFromHierarquia({Id: this.formData.EmployeeId})
+      this.managerProfile = await this.getDataFromHierarquia({Id: this.formData.ManagerId})
 
       this.isEmployee = this.employeeProfile.EMAIL_EMPLOYE === currentUserEmail
-      this.isManager = this.managerProfile.EMAIL_EMPLOYE === currentUserEmail
-
-      this.items = await this.getItemsFromSecondaryList(this.context.item.ID)
+      this.isManager = this.managerProfile.EMAIL_EMPLOYE === currentUserEmail      
 
       Log.info(LOG_SOURCE, 'Activated DailyReportHomeOfficeFormCustomizer with properties:');
       Log.info(LOG_SOURCE, JSON.stringify(this.properties, undefined, 2));
@@ -84,8 +89,8 @@ export default class DailyReportHomeOfficeFormCustomizer
         onSave: this._onSave.bind(this),
         employee: this.employeeProfile,
         manager: this.managerProfile,
-        date: this.initialDate,
-        items: this.items,
+        date: this.formData.JobDate,
+        formData: this.formData,
         isManager: this.isManager,
         isEmployee: this.isEmployee
        });
@@ -149,46 +154,91 @@ export default class DailyReportHomeOfficeFormCustomizer
     const { Id } = await this.saveOnMainList(dataToSave)
     items.forEach((item) => {item.DailyReportHomeOfficeId = Id})
 
-    await this.saveOnSecondaryList(items)
+    const secondaryListResponse = items.map((item) => this.saveOnSecondaryList(item))
+
+    await Promise.all(secondaryListResponse)
+
+    return Promise.resolve()
   }
 
   private async saveOnMainList(data: DailyReportDto): Promise<DailyReportDto> {
-    
-    // create a new item in the main list
-    const apiUrl = `${this.getApiUrl()}/_api/web/lists(guid'${this.dailyReportListId}')/items'`
+    const {Id, Tag, ...dataToSave} = data
+    let apiUrl = ''
+    let method = ''
+
+    if(Id) {
+      apiUrl = `${this.getApiUrl()}/_api/web/lists(guid'${this.dailyReportListId}')/items(${Id})`
+      method = 'PATCH'
+    }
+    else {
+      apiUrl = `${this.getApiUrl()}/_api/web/lists(guid'${this.dailyReportListId}')/items`
+      method = 'MERGE'
+    }
     
 
-    const response = await this.context.spHttpClient.post(apiUrl, SPHttpClient.configurations.v1, {
-      body: JSON.stringify(data)
+    const response = await this.context.spHttpClient.fetch(apiUrl, SPHttpClient.configurations.v1,       {
+      method: method,
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "odata-version": "",
+        "IF-MATCH": Tag
+      },
+      body: JSON.stringify({
+        ...dataToSave,
+      })
     })
 
     // return the new item
     return response.ok ? response.json() : Promise.reject(response.statusText)
   }
 
-  private async saveOnSecondaryList(items: JobItemDto[]): Promise<void> {
-    const apiUrl = `${this.getApiUrl()}/_api/web/lists(guid'${this.dailyReportItemsListId}')/items'`
+  private async saveOnSecondaryList(data: JobItemDto): Promise<JobItemDto> {
+    const {Id, Tag, ...dataToSave} = data
+    let apiUrl = ''
+    let method = ''
 
-    const response = items.map((item) => {
-      return this.context.spHttpClient.post(apiUrl, SPHttpClient.configurations.v1, {
-        body: JSON.stringify(item)
-      })
-    })    
+    if(Id) {
+      apiUrl = `${this.getApiUrl()}/_api/web/lists(guid'${this.dailyReportItemsListId}')/items(${Id})`
+      method = 'PATCH'
+    }
+    else {
+      apiUrl = `${this.getApiUrl()}/_api/web/lists(guid'${this.dailyReportItemsListId}')/items`
+      method = 'MERGE'
+    }
 
-    await Promise.all(response)
+    const response = await this.context.spHttpClient.fetch(apiUrl, SPHttpClient.configurations.v1,       {
+      method: method,
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "odata-version": "",
+        "IF-MATCH": Tag
+      },
+      body: JSON.stringify(dataToSave)
+    })
+
+    return response.ok ? response.json() : Promise.reject(response.statusText)
   }
 
   private async getItemsFromMainList(id: number): Promise<GetDailyReportDto> {
-    const apiUrl = `${this.getApiUrl()}/_api/web/lists(guid'${this.dailyReportListId}')/items?$filter=Id eq ${id}`
+    const apiUrl = `${this.getApiUrl()}/_api/web/lists(guid'${this.dailyReportListId}')/items(${id})`
 
     const getDataResponse = await this.getData(apiUrl)
     const responseJson = await getDataResponse.json()
 
-    if(responseJson.value.length === 0) {
+    if(!responseJson) {
       throw Error('Não foi possível localizar registros')
     }
 
-    return responseJson.value[0]
+    return {
+      Id: responseJson.Id,
+      EmployeeId: responseJson.EmployeeId,
+      ManagerId: responseJson.ManagerId,
+      Status: responseJson.Status,
+      JobDate: new Date(responseJson.JobDate),
+      Tag: responseJson['@odata.etag'],    
+    }
   }
 
   private async getItemsFromSecondaryList(id: number): Promise<JobItemDto[]> { 
@@ -211,9 +261,9 @@ export default class DailyReportHomeOfficeFormCustomizer
         DailyReportHomeOfficeId: item.DailyReportHomeOfficeId,
         QuantidadeHoras: item.QuantidadeHoras,
         HomeOffice: item.HomeOffice,
-        CreatedAt: new Date(item.CreatedAt),
         HoraInicio: new Date(item.HoraInicio),
-        HoraFim: new Date(item.HoraFim)
+        HoraFim: new Date(item.HoraFim),
+        Tag: item['@odata.etag'],
       }
     })
   }

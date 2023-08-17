@@ -8,7 +8,8 @@ export function JobList(props: JobListProps): JSX.Element {
     const { 
         items,
         isManager,
-        isEmployee
+        isEmployee,
+        status
     } = props
 
     const columns: IColumn[] = [
@@ -62,7 +63,8 @@ export function JobList(props: JobListProps): JSX.Element {
             onRender: () => (
                 <ActionsColumn 
                     isManager={isManager}
-                    isEmployee={isEmployee}/>)
+                    isEmployee={isEmployee}
+                    status={status}/>)
         }
     ]
 

@@ -1,3 +1,4 @@
+import { StatusDailyReport } from "../../../../enums/StatusDailyReport";
 import { JobItemDto } from "../../../../interfaces/JobItem";
 
 type JobItemAsString = {
@@ -8,4 +9,5 @@ export interface JobListProps {
     items: JobItemAsString[];
     isManager: boolean;
     isEmployee: boolean;
+    status: StatusDailyReport
 }

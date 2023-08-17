@@ -7,15 +7,16 @@ import { DefaultButton } from '@fluentui/react';
 
 export function Form(props: FormProps): JSX.Element {
     const { 
-        onAddJobItem, 
+        date,
         employee,
-        date, 
         manager,
+        isEmployee,
+        isManager,
+        status,
+        onAddJobItem,
         onSaveDraft,
         onSaveAndSend,
         onSaveAndFinish,
-        isEmployee,
-        isManager
     } = props
 
     return (
@@ -40,7 +41,7 @@ export function Form(props: FormProps): JSX.Element {
                 <TextField defaultValue={manager.NAME_EMPLOYEE} label='Manager' readOnly={true} borderless={true}/>
             </Stack>
             {
-                isEmployee && (
+                isEmployee && status === 'Draft' && (
                     <>
                         <NewForm onAddJobItem={onAddJobItem}/>
                         <Stack tokens={{childrenGap: 'm'}} horizontal>
@@ -50,7 +51,7 @@ export function Form(props: FormProps): JSX.Element {
                     </>
 
                 ) ||
-                isManager && (
+                isManager && status === 'In review' && (
                     <>
                         <PrimaryButton onClick={onSaveAndFinish} text='Finish review'/>
                     </>
