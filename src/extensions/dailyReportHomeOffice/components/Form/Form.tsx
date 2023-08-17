@@ -1,7 +1,8 @@
 import * as React from 'react';
-import { Stack, TextField } from "office-ui-fabric-react"
+import { PrimaryButton, Stack, TextField } from "office-ui-fabric-react"
 import { FormProps } from './Form.props';
 import { NewForm } from '../NewForm/NewForm';
+import { DefaultButton } from '@fluentui/react';
 
 
 export function Form(props: FormProps): JSX.Element {
@@ -12,6 +13,7 @@ export function Form(props: FormProps): JSX.Element {
         manager,
         onSaveDraft,
         onSaveAndSend,
+        onSaveAndFinish,
         isEmployee,
         isManager
     } = props
@@ -38,14 +40,20 @@ export function Form(props: FormProps): JSX.Element {
                 <TextField defaultValue={manager.NAME_EMPLOYEE} label='Manager' readOnly={true} borderless={true}/>
             </Stack>
             {
-                !isManager && (
-                    <NewForm
-                        date={date}
-                        onSaveDraft={onSaveDraft}
-                        onSaveAndSend={onSaveAndSend}
-                        isEmployee={isEmployee}
-                        onAddJobItem={onAddJobItem}
-                    />
+                isEmployee && (
+                    <>
+                        <NewForm onAddJobItem={onAddJobItem}/>
+                        <Stack tokens={{childrenGap: 'm'}} horizontal>
+                            <DefaultButton onClick={onSaveDraft} text='Save draft'/>
+                            <PrimaryButton onClick={onSaveAndSend} text='Send to review'/>
+                        </Stack>
+                    </>
+
+                ) ||
+                isManager && (
+                    <>
+                        <PrimaryButton onClick={onSaveAndFinish} text='Finish review'/>
+                    </>
                 )
             }
         </Stack>

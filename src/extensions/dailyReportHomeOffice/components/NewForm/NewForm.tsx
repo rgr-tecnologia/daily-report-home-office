@@ -1,19 +1,15 @@
 import * as React from 'react';
 import { TimePicker } from '@fluentui/react';
-import { Checkbox, DefaultButton, IComboBox, PrimaryButton, Separator, Stack, Text, TextField } from "office-ui-fabric-react"
+import { Checkbox, IComboBox, PrimaryButton, Separator, Stack, Text, TextField } from "office-ui-fabric-react"
 import { NewFormProps } from './NewForm.props';
-import { JobItem } from '../../../../interfaces/JobItem';
+import { JobItemDto } from '../../../../interfaces/JobItem';
 
 export function NewForm(props: NewFormProps): JSX.Element {
     const {
-        date,
-        onSaveDraft,
-        onSaveAndSend,
-        isEmployee,
         onAddJobItem
     } = props
 
-    const baseItem: JobItem = {
+    const baseItem: JobItemDto = {
         Title: '',
         Description: '',
         Status: 'In review',
@@ -25,8 +21,9 @@ export function NewForm(props: NewFormProps): JSX.Element {
         HomeOffice: false
     }
     
-    const [jobItemData, setJobItemData] = React.useState<JobItem>({...baseItem})
-
+    const [jobItemData, setJobItemData] = React.useState<JobItemDto>({...baseItem})
+    const [errorMessage, setErrorMessage] = React.useState<string>('')
+    
     const onDataChange = (key: 'Title' | 'Description', value: string): void => {
         const itemData = {...jobItemData}
         itemData[key] = value
@@ -38,14 +35,14 @@ export function NewForm(props: NewFormProps): JSX.Element {
         event: React.FormEvent<HTMLElement | HTMLInputElement>, 
         checked: boolean
     ): void => {
-        const baseData: JobItem = {
+        const baseData: JobItemDto = {
             ...jobItemData,
             HoraExtra: checked
         }
 
         if(checked === false) {
-            baseData.HoraInicio = date
-            baseData.HoraFim = date
+            baseData.HoraInicio = baseItem.HoraInicio
+            baseData.HoraFim = baseItem.HoraFim
         }
         
         setJobItemData(baseData)
@@ -55,7 +52,7 @@ export function NewForm(props: NewFormProps): JSX.Element {
         event: React.FormEvent<HTMLElement | HTMLInputElement>, 
         checked: boolean
     ): void => {
-        const baseData: JobItem = {
+        const baseData: JobItemDto = {
             ...jobItemData,
             HomeOffice: checked
         }
@@ -78,6 +75,10 @@ export function NewForm(props: NewFormProps): JSX.Element {
     })
 
     const onSubmit = (): void => {
+        if(jobItemData.HoraExtra === false && jobItemData.HomeOffice === false) {
+            setErrorMessage('You must select at least one option')
+            return
+        }
         const {
             HoraInicio,
             HoraFim
@@ -89,6 +90,7 @@ export function NewForm(props: NewFormProps): JSX.Element {
             QuantidadeHoras: Math.abs(HoraFim.getTime() - HoraInicio.getTime()) / 1000 / 3600
         })
         setJobItemData({...baseItem})
+        setErrorMessage('')
     }
 
     return (
@@ -130,14 +132,7 @@ export function NewForm(props: NewFormProps): JSX.Element {
                         onClick={onSubmit}/>
                 </Stack>
             </Stack>
-            {
-                isEmployee && (
-                    <Stack tokens={{childrenGap: 'm'}} horizontal>
-                        <DefaultButton onClick={() => onSaveDraft()} text='Save draft'/>
-                        <PrimaryButton onClick={() => onSaveAndSend()} text='Send to review'/>
-                    </Stack>
-                ) 
-            }
+            <Text style={{color: 'red'}}>{errorMessage}</Text>
         </>
     )
 }

@@ -2,10 +2,10 @@ import * as React from 'react';
 import { DailyReportHomeOfficeProps } from './DailyReportHomeOfficeProps';
 import { Stack } from '@fluentui/react';
 import { JobList } from './JobList/JobList';
-import { JobItem } from '../../../interfaces/JobItem';
+import { JobItemDto } from '../../../interfaces/JobItem';
 import { Text } from 'office-ui-fabric-react';
 import { JobListProps } from './JobList/JobList.props';
-import { DailyReportFormData } from '../../../interfaces/DailyReportFormData';
+import { DailyReportDto } from '../../../interfaces/DailyReport';
 import { Form } from './Form/Form';
 
 export function DailyReportHomeOffice(props: DailyReportHomeOfficeProps): JSX.Element {
@@ -19,11 +19,11 @@ export function DailyReportHomeOffice(props: DailyReportHomeOfficeProps): JSX.El
     isEmployee
   } = props
 
-  const [jobItems, setJobItems] = React.useState<JobItem[]>(items)
+  const [jobItems, setJobItems] = React.useState<JobItemDto[]>(items)
 
-  const onAddJobItem = (jobItem: JobItem): void => setJobItems([...jobItems, jobItem])
+  const onAddJobItem = (jobItem: JobItemDto): void => setJobItems([...jobItems, jobItem])
 
-  const formatJobItemsDateProperties = (items: JobItem[]): JobListProps["items"] => {
+  const formatJobItemsDateProperties = (items: JobItemDto[]): JobListProps["items"] => {
     return items.map(item => ({
       ...item,
       HoraInicio: item.HoraInicio.toLocaleTimeString(),
@@ -32,7 +32,7 @@ export function DailyReportHomeOffice(props: DailyReportHomeOfficeProps): JSX.El
   }
 
   const onSaveDraft = (): void => {
-    const FormData: DailyReportFormData = {
+    const FormData: DailyReportDto = {
       Id: null,
       EmployeeId: employee.Id,
       ManagerId: manager.Id,
@@ -44,11 +44,23 @@ export function DailyReportHomeOffice(props: DailyReportHomeOfficeProps): JSX.El
   }
 
   const onSaveAndSend = (): void => {
-    const FormData: DailyReportFormData = {
+    const FormData: DailyReportDto = {
       Id: null,
       EmployeeId: employee.Id,
       ManagerId: manager.Id,
       Status: 'In review',
+      items: jobItems
+    }
+
+    onSave(FormData)
+  }
+
+  const onSaveAndFinish = (): void => {
+    const FormData: DailyReportDto = {
+      Id: null,
+      EmployeeId: employee.Id,
+      ManagerId: manager.Id,
+      Status: 'Reviewed',
       items: jobItems
     }
 
@@ -65,6 +77,7 @@ export function DailyReportHomeOffice(props: DailyReportHomeOfficeProps): JSX.El
         onAddJobItem={onAddJobItem} 
         onSaveDraft={onSaveDraft}
         onSaveAndSend={onSaveAndSend}
+        onSaveAndFinish={onSaveAndFinish}
         isManager={isManager}
         isEmployee={isEmployee}/>
       <JobList

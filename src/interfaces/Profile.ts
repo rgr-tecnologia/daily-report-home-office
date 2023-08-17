@@ -5,5 +5,6 @@ export interface Profile {
     GROUP: string;
     AREA: string;
     EMAIL_1ST_EVALUATOR: string;
-    LoginName: string;    
+    LoginName: string;
+    [key: string]: string | number | undefined;
 }

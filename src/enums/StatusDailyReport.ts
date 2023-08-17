@@ -1,1 +1,1 @@
-export type StatusDailyReport = "Draft" | "In review" | "Approved" | "Rejected"
+export type StatusDailyReport = "Draft" | "In review" | "Reviewed"
