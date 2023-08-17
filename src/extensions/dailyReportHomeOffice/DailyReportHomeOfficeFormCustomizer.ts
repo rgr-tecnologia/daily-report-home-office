@@ -87,6 +87,7 @@ export default class DailyReportHomeOfficeFormCustomizer
       React.createElement(DailyReportHomeOffice, {
         displayMode: this.displayMode,
         onSave: this._onSave.bind(this),
+        onSaveSecondary: this.saveOnSecondaryList.bind(this),
         employee: this.employeeProfile,
         manager: this.managerProfile,
         date: this.formData.JobDate,

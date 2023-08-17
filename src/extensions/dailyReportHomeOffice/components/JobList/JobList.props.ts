@@ -1,13 +1,10 @@
-import { StatusDailyReport } from "../../../../enums/StatusDailyReport";
 import { JobItemDto } from "../../../../interfaces/JobItem";
+import { ActionsColumnProps } from "../ActionsColumn/ActionsColumn.props";
 
-type JobItemAsString = {
+export type JobItemAsString = {
     [K in keyof JobItemDto] : JobItemDto[K] extends Date? string: JobItemDto[K]
 }
 
-export interface JobListProps {
+export interface JobListProps extends Omit<ActionsColumnProps, "item"> {
     items: JobItemAsString[];
-    isManager: boolean;
-    isEmployee: boolean;
-    status: StatusDailyReport
 }

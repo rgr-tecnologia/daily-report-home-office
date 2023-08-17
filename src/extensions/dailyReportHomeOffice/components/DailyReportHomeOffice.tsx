@@ -4,13 +4,14 @@ import { Stack } from '@fluentui/react';
 import { JobList } from './JobList/JobList';
 import { JobItemDto } from '../../../interfaces/JobItem';
 import { Text } from 'office-ui-fabric-react';
-import { JobListProps } from './JobList/JobList.props';
+import { JobItemAsString, JobListProps } from './JobList/JobList.props';
 import { DailyReportDto } from '../../../interfaces/DailyReport';
 import { Form } from './Form/Form';
 
 export function DailyReportHomeOffice(props: DailyReportHomeOfficeProps): JSX.Element {
   const {
     onSave,
+    onSaveSecondary,
     employee,
     manager,
     isManager,
@@ -65,6 +66,24 @@ export function DailyReportHomeOffice(props: DailyReportHomeOfficeProps): JSX.El
     onSave(FormData)
   }
 
+  const opApprove = (item: JobItemAsString): void => {
+    onSaveSecondary({
+      ...item,
+      Status: 'Approved',
+      HoraInicio: new Date(item.HoraInicio),
+      HoraFim: new Date(item.HoraFim),
+    })
+  }
+
+  const onReject = (item: JobItemAsString): void => {
+    onSaveSecondary({
+      ...item,
+      Status: 'Rejected',
+      HoraInicio: new Date(item.HoraInicio),
+      HoraFim: new Date(item.HoraFim),
+    })
+  }
+
   return (
     <Stack>
       <Text style={{color: 'red'}}> Disclaimer genérico</Text>
@@ -83,7 +102,9 @@ export function DailyReportHomeOffice(props: DailyReportHomeOfficeProps): JSX.El
         items={formatJobItemsDateProperties(jobItems)}
         isManager={isManager}
         isEmployee={isEmployee}
-        status={Status}/>
+        status={Status}
+        onApprove={opApprove}
+        onReject={onReject}/>
     </Stack>
   );
 }

@@ -52,9 +52,9 @@ export function Form(props: FormProps): JSX.Element {
 
                 ) ||
                 isManager && status === 'In review' && (
-                    <>
+                    <Stack tokens={{childrenGap: 'm'}} style={{alignItems: "flex-end"}} horizontal>
                         <PrimaryButton onClick={onSaveAndFinish} text='Finish review'/>
-                    </>
+                    </Stack>
                 )
             }
         </Stack>

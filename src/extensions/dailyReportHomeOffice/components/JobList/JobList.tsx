@@ -1,15 +1,18 @@
 import * as React from 'react';
 import { DetailsList, IColumn } from "office-ui-fabric-react";
-import { JobListProps } from './JobList.props';
+import { JobItemAsString, JobListProps } from './JobList.props';
 import { SelectionMode } from '@fluentui/react';
 import { ActionsColumn } from '../ActionsColumn/ActionsColumn';
+
 
 export function JobList(props: JobListProps): JSX.Element {
     const { 
         items,
         isManager,
         isEmployee,
-        status
+        status,
+        onApprove,
+        onReject
     } = props
 
     const columns: IColumn[] = [
@@ -60,18 +63,22 @@ export function JobList(props: JobListProps): JSX.Element {
             key: `column9`,
             name: 'Actions',
             minWidth: 100,
-            onRender: () => (
+            onRender: (item: JobItemAsString) => (
                 <ActionsColumn 
                     isManager={isManager}
                     isEmployee={isEmployee}
+                    onApprove={onApprove}
+                    onReject={onReject}
+                    item={item}
                     status={status}/>)
         }
     ]
 
-    return <>
-        <DetailsList 
-            items={items} 
-            columns={columns} 
-            selectionMode={SelectionMode.none}/>
-    </>
+    return (
+        <>
+            <DetailsList 
+                items={items} 
+                columns={columns} 
+                selectionMode={SelectionMode.none}/>
+        </>)
 }

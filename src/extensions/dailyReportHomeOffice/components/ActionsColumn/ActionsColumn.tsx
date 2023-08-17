@@ -1,12 +1,17 @@
 import * as React from 'react';
-import { FontIcon, Stack } from "office-ui-fabric-react"
+import { Stack } from "office-ui-fabric-react"
 import { ActionsColumnProps } from './ActionsColumn.props';
+import { IconButton } from '@fluentui/react';
 
 export function ActionsColumn(props: ActionsColumnProps): JSX.Element {
     const {
         isEmployee,
         isManager,
-        status
+        status,
+        item,
+        //onEdit,
+        onApprove,
+        onReject
     } = props
     const styles = {
         fontSize: '1rem'
@@ -19,13 +24,13 @@ export function ActionsColumn(props: ActionsColumnProps): JSX.Element {
         {
             isEmployee && status === 'Draft' && (
                 <>
-                    <FontIcon iconName="Edit" style={styles}/>
+                    <IconButton iconProps={{iconName:"Edit"}} style={styles}/>
                 </>
             ) ||
             isManager && status === 'In review' && (
                 <>
-                    <FontIcon iconName="Accept" style={styles}/>
-                    <FontIcon iconName="Cancel" style={styles}/>
+                    <IconButton iconProps={{iconName:"Accept"}} style={styles} onClick={() => onApprove(item)}/>
+                    <IconButton iconProps={{iconName:"Cancel"}} style={styles} onClick={() => onReject(item)}/>
                 </>
             )
         }
