@@ -6,5 +6,5 @@ export type JobItemAsString = {
 }
 
 export interface JobListProps extends Omit<ActionsColumnProps, "item"> {
-    items: JobItemAsString[];
+    items: JobItemDto[];
 }

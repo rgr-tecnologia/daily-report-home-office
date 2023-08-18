@@ -3,11 +3,12 @@ import { DailyReportDto } from "../../../interfaces/DailyReport";
 import { FormProps } from "./Form/Form.props";
 import { JobItemDto } from "../../../interfaces/JobItem";
 
-type BaseWithOmit = Omit<FormProps, 'onSaveDraft' | 'onSaveAndSend' | 'onAddJobItem' | 'onSaveAndFinish' | 'status'>
-
-export interface DailyReportHomeOfficeProps extends BaseWithOmit {
-    onSave: (data: DailyReportDto) => void
+export interface DailyReportHomeOfficeProps extends FormProps {
+    onSave: (data: DailyReportDto, reload: boolean) => void
     onSaveSecondary: (data: JobItemDto) => void
-    formData: DailyReportDto
     displayMode: FormDisplayMode
+    isEmployee: boolean
+    isManager: boolean
+    formData: DailyReportDto
+    items: JobItemDto[]
 }

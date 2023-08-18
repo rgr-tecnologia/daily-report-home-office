@@ -9,7 +9,7 @@ export function ActionsColumn(props: ActionsColumnProps): JSX.Element {
         isManager,
         status,
         item,
-        //onEdit,
+        onEdit,
         onApprove,
         onReject
     } = props
@@ -24,7 +24,7 @@ export function ActionsColumn(props: ActionsColumnProps): JSX.Element {
         {
             isEmployee && status === 'Draft' && (
                 <>
-                    <IconButton iconProps={{iconName:"Edit"}} style={styles}/>
+                    <IconButton iconProps={{iconName:"Edit"}} style={styles} onClick={() => onEdit(item)}/>
                 </>
             ) ||
             isManager && status === 'In review' && (

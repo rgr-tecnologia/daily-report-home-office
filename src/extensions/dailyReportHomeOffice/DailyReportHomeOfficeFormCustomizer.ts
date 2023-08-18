@@ -13,7 +13,7 @@ import { Profile } from '../../interfaces/Profile';
 
 import { SPHttpClient, HttpClientResponse } from '@microsoft/sp-http';  
 import { JobItemDto, ResponseJobItem } from '../../interfaces/JobItem';
-import { DailyReportDto, GetDailyReportDto } from '../../interfaces/DailyReport';
+import { DailyReportDto } from '../../interfaces/DailyReport';
 
 /**
  * If your form customizer uses the ClientSideComponentProperties JSON input,
@@ -35,11 +35,11 @@ export default class DailyReportHomeOfficeFormCustomizer
   dailyReportItemsListId = 'c5f255aa-ed5d-418e-b2af-d7d48ddbf0fb'
 
   formData: DailyReportDto = {
+    Id: null,
     EmployeeId: null,
     ManagerId: null,
     Status: 'Draft',
     JobDate: new Date(),
-    items: [],
   }
 
   employeeProfile: Profile
@@ -48,7 +48,7 @@ export default class DailyReportHomeOfficeFormCustomizer
   isEmployee: boolean
   isManager: boolean
 
-  items: JobItemDto[]
+  jobItems: JobItemDto[] = []
 
   public async onInit(): Promise<void> {
     // Add your custom initialization to this method. The framework will wait
@@ -59,41 +59,44 @@ export default class DailyReportHomeOfficeFormCustomizer
       this.employeeProfile = await this.getDataFromHierarquia({EMAIL_EMPLOYE: currentUserEmail})
       this.managerProfile = await this.getDataFromHierarquia({EMAIL_1ST_EVALUATOR: this.employeeProfile.EMAIL_1ST_EVALUATOR})
 
+      this.formData.EmployeeId = this.employeeProfile.Id
+      this.formData.ManagerId = this.managerProfile.Id
+
       this.isEmployee = true
       this.isManager = false
-
-      Log.info(LOG_SOURCE, 'Activated DailyReportHomeOfficeFormCustomizer with properties:');
-      Log.info(LOG_SOURCE, JSON.stringify(this.properties, undefined, 2));
-      return Promise.resolve();
     }
     else {
       this.formData = await this.getItemsFromMainList(this.context.item.ID)
-      this.formData.items = await this.getItemsFromSecondaryList(this.formData.Id)
+      this.jobItems = await this.getItemsFromSecondaryList(this.formData.Id)
       
       this.employeeProfile = await this.getDataFromHierarquia({Id: this.formData.EmployeeId})
       this.managerProfile = await this.getDataFromHierarquia({Id: this.formData.ManagerId})
 
-      this.isEmployee = this.employeeProfile.EMAIL_EMPLOYE === currentUserEmail
-      this.isManager = this.managerProfile.EMAIL_EMPLOYE === currentUserEmail      
+      this.formData.EmployeeId = this.employeeProfile.Id
+      this.formData.ManagerId = this.managerProfile.Id
 
-      Log.info(LOG_SOURCE, 'Activated DailyReportHomeOfficeFormCustomizer with properties:');
-      Log.info(LOG_SOURCE, JSON.stringify(this.properties, undefined, 2));
-      return Promise.resolve();      
+      this.isEmployee = this.employeeProfile.EMAIL_EMPLOYE === currentUserEmail
+      this.isManager = this.managerProfile.EMAIL_EMPLOYE === currentUserEmail           
     }
+
+    Log.info(LOG_SOURCE, 'Activated DailyReportHomeOfficeFormCustomizer with properties:');
+    Log.info(LOG_SOURCE, JSON.stringify(this.properties, undefined, 2));
+    return Promise.resolve();
   }
 
   public render(): void {
     const dailyReportHomeOffice: React.ReactElement<DailyReportHomeOfficeProps> =
       React.createElement(DailyReportHomeOffice, {
         displayMode: this.displayMode,
-        onSave: this._onSave.bind(this),
+        onSave: this.saveOnMainList.bind(this),
         onSaveSecondary: this.saveOnSecondaryList.bind(this),
         employee: this.employeeProfile,
         manager: this.managerProfile,
         date: this.formData.JobDate,
-        formData: this.formData,
         isManager: this.isManager,
-        isEmployee: this.isEmployee
+        isEmployee: this.isEmployee,
+        formData: this.formData,
+        items: this.jobItems,
        });
 
     ReactDOM.render(dailyReportHomeOffice, this.domElement);
@@ -103,12 +106,6 @@ export default class DailyReportHomeOfficeFormCustomizer
     // This method should be used to free any resources that were allocated during rendering.
     ReactDOM.unmountComponentAtNode(this.domElement);
     super.onDispose();
-  }
-
-  private _onSave = async (data: DailyReportDto): Promise<void> => {
-    await this.saveData(data)
-    // You MUST call this.formSaved() after you save the form.
-    this.formSaved();
   }
 
   /* Método não será necessário, pois não teremos um botão de cancelar
@@ -121,7 +118,7 @@ export default class DailyReportHomeOfficeFormCustomizer
     let query = ''
     if(Object.keys(data).length === 1) {
       const key = Object.keys(data)[0]
-      query = `${key} eq ${data[key]}`
+      query = `${key} eq '${data[key]}'`
     }
     else {
       query = Object.keys(data).reduce((accumulator, key) => {
@@ -149,33 +146,19 @@ export default class DailyReportHomeOfficeFormCustomizer
     return await this.context.spHttpClient.get(url, SPHttpClient.configurations.v1)
   }
 
-  private async saveData(data: DailyReportDto): Promise<void> {
-    const {items, ...dataToSave} = data
-
-    const { Id } = await this.saveOnMainList(dataToSave)
-    items.forEach((item) => {item.DailyReportHomeOfficeId = Id})
-
-    const secondaryListResponse = items.map((item) => this.saveOnSecondaryList(item))
-
-    await Promise.all(secondaryListResponse)
-
-    return Promise.resolve()
-  }
-
-  private async saveOnMainList(data: DailyReportDto): Promise<DailyReportDto> {
+  private async saveOnMainList(data: DailyReportDto, reload: boolean): Promise<DailyReportDto> {
     const {Id, Tag, ...dataToSave} = data
     let apiUrl = ''
     let method = ''
 
     if(Id) {
       apiUrl = `${this.getApiUrl()}/_api/web/lists(guid'${this.dailyReportListId}')/items(${Id})`
-      method = 'PATCH'
+      method = 'MERGE'
     }
     else {
       apiUrl = `${this.getApiUrl()}/_api/web/lists(guid'${this.dailyReportListId}')/items`
-      method = 'MERGE'
-    }
-    
+      method = 'POST'
+    }    
 
     const response = await this.context.spHttpClient.fetch(apiUrl, SPHttpClient.configurations.v1,       {
       method: method,
@@ -190,8 +173,18 @@ export default class DailyReportHomeOfficeFormCustomizer
       })
     })
 
-    // return the new item
-    return response.ok ? response.json() : Promise.reject(response.statusText)
+    if(
+      response.ok) {
+      if(reload) {
+        // You MUST call this.formSaved() after you save the form.
+        this.formSaved();
+      } else {
+        return await response.json()
+      }      
+    }
+    else {
+      return Promise.reject(response.statusText)
+    }
   }
 
   private async saveOnSecondaryList(data: JobItemDto): Promise<JobItemDto> {
@@ -199,14 +192,19 @@ export default class DailyReportHomeOfficeFormCustomizer
     let apiUrl = ''
     let method = ''
 
+    if(this.formData.Id === null) {
+      this.formData = await this.saveOnMainList(this.formData, false) 
+    }
+
     if(Id) {
       apiUrl = `${this.getApiUrl()}/_api/web/lists(guid'${this.dailyReportItemsListId}')/items(${Id})`
-      method = 'PATCH'
+      method = 'MERGE'
     }
     else {
       apiUrl = `${this.getApiUrl()}/_api/web/lists(guid'${this.dailyReportItemsListId}')/items`
-      method = 'MERGE'
-    }
+      method = 'POST'
+      dataToSave.DailyReportHomeOfficeId = this.formData.Id
+    }    
 
     const response = await this.context.spHttpClient.fetch(apiUrl, SPHttpClient.configurations.v1,       {
       method: method,
@@ -222,7 +220,7 @@ export default class DailyReportHomeOfficeFormCustomizer
     return response.ok ? response.json() : Promise.reject(response.statusText)
   }
 
-  private async getItemsFromMainList(id: number): Promise<GetDailyReportDto> {
+  private async getItemsFromMainList(id: number): Promise<DailyReportDto> {
     const apiUrl = `${this.getApiUrl()}/_api/web/lists(guid'${this.dailyReportListId}')/items(${id})`
 
     const getDataResponse = await this.getData(apiUrl)

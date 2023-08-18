@@ -1,28 +1,21 @@
 import * as React from 'react';
 import { TimePicker } from '@fluentui/react';
-import { Checkbox, IComboBox, PrimaryButton, Separator, Stack, Text, TextField } from "office-ui-fabric-react"
+import { Checkbox, IComboBox, PrimaryButton, Separator, Stack, TextField } from "office-ui-fabric-react"
 import { NewFormProps } from './NewForm.props';
 import { JobItemDto } from '../../../../interfaces/JobItem';
 
 export function NewForm(props: NewFormProps): JSX.Element {
     const {
-        onAddJobItem
+        onSubmit,
+        onUpdate,
+        currentItem
     } = props
-
-    const baseItem: JobItemDto = {
-        Title: '',
-        Description: '',
-        Status: 'In review',
-        HoraExtra: false,
-        HoraInicio: new Date(),
-        HoraFim: new Date(),
-        DailyReportHomeOfficeId: null,
-        QuantidadeHoras: 0,
-        HomeOffice: false
-    }
     
-    const [jobItemData, setJobItemData] = React.useState<JobItemDto>({...baseItem})
-    const [errorMessage, setErrorMessage] = React.useState<string>('')
+    const [jobItemData, setJobItemData] = React.useState<JobItemDto>(currentItem)
+
+    React.useEffect(() => {
+        setJobItemData(currentItem)
+    }, [currentItem])
     
     const onDataChange = (key: 'Title' | 'Description', value: string): void => {
         const itemData = {...jobItemData}
@@ -41,8 +34,8 @@ export function NewForm(props: NewFormProps): JSX.Element {
         }
 
         if(checked === false) {
-            baseData.HoraInicio = baseItem.HoraInicio
-            baseData.HoraFim = baseItem.HoraFim
+            baseData.HoraInicio = new Date()
+            baseData.HoraFim = new Date()
         }
         
         setJobItemData(baseData)
@@ -74,50 +67,32 @@ export function NewForm(props: NewFormProps): JSX.Element {
         HoraFim: time
     })
 
-    const onSubmit = (): void => {
-        if(jobItemData.HoraExtra === false && jobItemData.HomeOffice === false) {
-            setErrorMessage('You must select at least one option')
-            return
-        }
-        const {
-            HoraInicio,
-            HoraFim
-        } = jobItemData
-
-        
-        onAddJobItem({
-            ...jobItemData,
-            QuantidadeHoras: Math.abs(HoraFim.getTime() - HoraInicio.getTime()) / 1000 / 3600
-        })
-        setJobItemData({...baseItem})
-        setErrorMessage('')
-    }
-
     return (
         <>
             <Stack>
-                <Text variant='large'>New job description</Text>
                 <Separator />
             </Stack>
             <Stack tokens={{childrenGap: 'm'}}>
                 <TextField 
                     value={jobItemData.Title}
                     onChange={(event) => onDataChange('Title', (event.target as HTMLInputElement).value)}
-                    label='Title' />
+                    label='Title' 
+                    required/>
                 <TextField 
                     value={jobItemData.Description}
                     onChange={(event) => onDataChange('Description', (event.target as HTMLInputElement).value)}
                     label='Description' 
                     multiline 
-                    resizable={false}/>
+                    resizable={false}
+                    required/>
                 <Stack horizontal tokens={{
                     childrenGap: 'm'
                 }}>
                     <Checkbox checked={jobItemData.HomeOffice} label='Home Office' onChange={onChangeHomeOffice}/>
-                    <Checkbox checked={jobItemData.HoraExtra} label='Hora extra' onChange={onChangeHoraExtra}/>                    
+                    <Checkbox checked={jobItemData.HoraExtra} label='Overtime' onChange={onChangeHoraExtra}/>                    
                     {jobItemData.HoraExtra && (<>
-                    <TimePicker label='Hora de início' onChange={onChangeHoraInicio}/>
-                    <TimePicker label='Hora de fim' onChange={onChangeHoraFim}/>
+                    <TimePicker value={jobItemData.HoraInicio} label='Start time' onChange={onChangeHoraInicio}/>
+                    <TimePicker value={jobItemData.HoraFim} label='End time' onChange={onChangeHoraFim}/>
                 </>)}
                 </Stack>
                 <Stack 
@@ -126,13 +101,17 @@ export function NewForm(props: NewFormProps): JSX.Element {
                     }}
                     styles={{root: {alignSelf: 'end'}}}
                     >
-                    <PrimaryButton 
+                    { !currentItem.Id && <PrimaryButton 
                         text='Add job'
                         iconProps={{iconName: 'Add'}}
-                        onClick={onSubmit}/>
+                        onClick={() => onSubmit(jobItemData)}/>}
+                    
+                    { currentItem.Id && <PrimaryButton 
+                        text='Update job'
+                        iconProps={{iconName: 'Add'}}
+                        onClick={() => onUpdate(jobItemData)}/>}
                 </Stack>
             </Stack>
-            <Text style={{color: 'red'}}>{errorMessage}</Text>
         </>
     )
 }

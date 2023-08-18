@@ -1,5 +1,8 @@
 import { JobItemDto } from "../../../../interfaces/JobItem";
 
 export interface NewFormProps {
-    onAddJobItem: (jobItem: JobItemDto) => void;
+    onSubmit: (jobItem: JobItemDto) => void;
+    onUpdate: (jobItem: JobItemDto) => void;
+    onDataChange: (jobItem: JobItemDto) => void;
+    currentItem: JobItemDto;
 }

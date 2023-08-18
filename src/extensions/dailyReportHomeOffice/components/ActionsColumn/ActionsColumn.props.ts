@@ -1,11 +1,10 @@
-import { JobItemAsString } from "../JobList/JobList.props";
-
+import { JobItemDto } from "../../../../interfaces/JobItem";
 export interface ActionsColumnProps {
     isManager: boolean;
     isEmployee: boolean;
     status: string;
-    item: JobItemAsString;
-    onEdit?: (item: JobItemAsString) => void;
-    onApprove: (item: JobItemAsString) => void;
-    onReject: (item: JobItemAsString) => void;
+    item: JobItemDto;
+    onEdit?: (item: JobItemDto) => void;
+    onApprove: (item: JobItemDto) => void;
+    onReject: (item: JobItemDto) => void;
 }
