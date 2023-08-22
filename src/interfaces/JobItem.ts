@@ -1,6 +1,20 @@
 import { JobItemStatus } from "../enums/JobItemStatus";
 
-export interface ResponseJobItem {
+export interface CreateResponseJobItem {
+    Id: number;
+    Title: string;
+    Description: string;
+    Status: JobItemStatus;
+    HoraExtra: boolean;
+    DailyReportHomeOfficeId: number;
+    QuantidadeHoras: number ;
+    HomeOffice: boolean;
+    HoraInicio: string;
+    HoraFim: string;
+    "odata.etag": string
+}
+
+export interface GetResponseJobItem {
     Id: number;
     Title: string;
     Description: string;

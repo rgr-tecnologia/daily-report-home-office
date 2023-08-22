@@ -14,7 +14,8 @@ export function JobList(props: JobListProps): JSX.Element {
         status,
         onApprove,
         onReject,
-        onEdit
+        onEdit,
+        onDelete
     } = props
 
     const [jobItems, setJobItems] = React.useState<JobItemDto[]>(items)
@@ -78,9 +79,10 @@ export function JobList(props: JobListProps): JSX.Element {
         },
         {
             key: `column9`,
-            name: 'Qtd horas',
+            name: 'Overtime hours',
             fieldName: 'QuantidadeHoras',
-            minWidth: 100
+            minWidth: 100,
+            onRender: (item => <>{item.QuantidadeHoras.toFixed(2)}</>)
         },
         {
             key: `column10`,
@@ -93,6 +95,7 @@ export function JobList(props: JobListProps): JSX.Element {
                     onApprove={onApprove}
                     onReject={onReject}
                     onEdit={onEdit}
+                    onDelete={onDelete}
                     item={items.filter(i => i.Id === item.Id)[0]}
                     status={status}
                 />)

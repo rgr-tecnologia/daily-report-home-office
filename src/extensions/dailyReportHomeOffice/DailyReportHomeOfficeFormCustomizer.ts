@@ -12,7 +12,7 @@ import { DailyReportHomeOfficeProps } from './components/DailyReportHomeOfficePr
 import { Profile } from '../../interfaces/Profile';
 
 import { SPHttpClient, HttpClientResponse } from '@microsoft/sp-http';  
-import { JobItemDto, ResponseJobItem } from '../../interfaces/JobItem';
+import { JobItemDto, GetResponseJobItem, CreateResponseJobItem } from '../../interfaces/JobItem';
 import { DailyReportDto } from '../../interfaces/DailyReport';
 
 /**
@@ -57,7 +57,7 @@ export default class DailyReportHomeOfficeFormCustomizer
 
     if(this.displayMode === FormDisplayMode.New) {
       this.employeeProfile = await this.getDataFromHierarquia({EMAIL_EMPLOYE: currentUserEmail})
-      this.managerProfile = await this.getDataFromHierarquia({EMAIL_1ST_EVALUATOR: this.employeeProfile.EMAIL_1ST_EVALUATOR})
+      this.managerProfile = await this.getDataFromHierarquia({EMAIL_EMPLOYE: this.employeeProfile.EMAIL_1ST_EVALUATOR})
 
       this.formData.EmployeeId = this.employeeProfile.Id
       this.formData.ManagerId = this.managerProfile.Id
@@ -90,6 +90,7 @@ export default class DailyReportHomeOfficeFormCustomizer
         displayMode: this.displayMode,
         onSave: this.saveOnMainList.bind(this),
         onSaveSecondary: this.saveOnSecondaryList.bind(this),
+        onDeleteSecondary: this.deleteItemFromSecondaryList.bind(this),
         employee: this.employeeProfile,
         manager: this.managerProfile,
         date: this.formData.JobDate,
@@ -169,7 +170,10 @@ export default class DailyReportHomeOfficeFormCustomizer
         "IF-MATCH": Tag
       },
       body: JSON.stringify({
-        ...dataToSave,
+        EmployeeId: dataToSave.EmployeeId,
+        ManagerId: dataToSave.ManagerId,
+        Status: dataToSave.Status,
+        JobDate: dataToSave.JobDate,
       })
     })
 
@@ -179,7 +183,11 @@ export default class DailyReportHomeOfficeFormCustomizer
         // You MUST call this.formSaved() after you save the form.
         this.formSaved();
       } else {
-        return await response.json()
+        const responseJson = await response.json()
+        return  {
+          ...responseJson,
+          Tag: responseJson['odata.etag'],
+        }
       }      
     }
     else {
@@ -187,14 +195,10 @@ export default class DailyReportHomeOfficeFormCustomizer
     }
   }
 
-  private async saveOnSecondaryList(data: JobItemDto): Promise<JobItemDto> {
+  private async saveOnSecondaryList(data: JobItemDto): Promise<CreateResponseJobItem> {
     const {Id, Tag, ...dataToSave} = data
     let apiUrl = ''
     let method = ''
-
-    if(this.formData.Id === null) {
-      this.formData = await this.saveOnMainList(this.formData, false) 
-    }
 
     if(Id) {
       apiUrl = `${this.getApiUrl()}/_api/web/lists(guid'${this.dailyReportItemsListId}')/items(${Id})`
@@ -203,10 +207,9 @@ export default class DailyReportHomeOfficeFormCustomizer
     else {
       apiUrl = `${this.getApiUrl()}/_api/web/lists(guid'${this.dailyReportItemsListId}')/items`
       method = 'POST'
-      dataToSave.DailyReportHomeOfficeId = this.formData.Id
     }    
 
-    const response = await this.context.spHttpClient.fetch(apiUrl, SPHttpClient.configurations.v1,       {
+    const response = await this.context.spHttpClient.fetch(apiUrl, SPHttpClient.configurations.v1, {
       method: method,
       headers: {
         "Accept": "application/json",
@@ -214,10 +217,29 @@ export default class DailyReportHomeOfficeFormCustomizer
         "odata-version": "",
         "IF-MATCH": Tag
       },
-      body: JSON.stringify(dataToSave)
+      body: JSON.stringify({
+        Title: dataToSave.Title,
+        Description: dataToSave.Description,
+        Status: dataToSave.Status,
+        HoraExtra: dataToSave.HoraExtra,
+        DailyReportHomeOfficeId: dataToSave.DailyReportHomeOfficeId,
+        QuantidadeHoras: dataToSave.QuantidadeHoras,
+        HomeOffice: dataToSave.HomeOffice,
+        HoraInicio: dataToSave.HoraInicio,
+        HoraFim: dataToSave.HoraFim,
+      })
     })
 
-    return response.ok ? response.json() : Promise.reject(response.statusText)
+    if(response.ok) {
+      const responseJson = await response.json()
+      return {
+        ...responseJson,
+        Tag: responseJson['odata.etag'],
+      }
+    }
+    else {
+      await Promise.reject(response.statusText)
+    }
   }
 
   private async getItemsFromMainList(id: number): Promise<DailyReportDto> {
@@ -236,7 +258,7 @@ export default class DailyReportHomeOfficeFormCustomizer
       ManagerId: responseJson.ManagerId,
       Status: responseJson.Status,
       JobDate: new Date(responseJson.JobDate),
-      Tag: responseJson['@odata.etag'],    
+      Tag: responseJson['@odata.etag'],
     }
   }
 
@@ -244,10 +266,10 @@ export default class DailyReportHomeOfficeFormCustomizer
     const apiUrl = `${this.getApiUrl()}/_api/web/lists(guid'${this.dailyReportItemsListId}')/items?$filter=DailyReportHomeOfficeId eq ${id}`
 
     const getDataResponse = await this.getData(apiUrl)
-    const { value } : { value: ResponseJobItem[]} = await getDataResponse.json()
+    const { value } : { value: GetResponseJobItem[]} = await getDataResponse.json()
 
     if(value.length === 0) {
-      throw Error('Não foi possível localizar registros')
+      return []
     }
 
     return value.map((item) => {
@@ -265,5 +287,26 @@ export default class DailyReportHomeOfficeFormCustomizer
         Tag: item['@odata.etag'],
       }
     })
+  }
+
+  private async deleteItemFromSecondaryList(id: number, tag: string): Promise<void> { 
+    const apiUrl = `${this.getApiUrl()}/_api/web/lists(guid'${this.dailyReportItemsListId}')/items(${id})`
+
+    const response = await this.context.spHttpClient.fetch(apiUrl, SPHttpClient.configurations.v1, {
+      method: 'DELETE',
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "odata-version": "",
+        "IF-MATCH": tag
+      },
+    })
+
+    if(response.ok) {
+      return response.json()
+    }
+    else {
+      await Promise.reject(response.statusText)
+    }
   }
 }

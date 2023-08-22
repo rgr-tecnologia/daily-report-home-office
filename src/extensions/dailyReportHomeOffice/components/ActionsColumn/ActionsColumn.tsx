@@ -11,7 +11,8 @@ export function ActionsColumn(props: ActionsColumnProps): JSX.Element {
         item,
         onEdit,
         onApprove,
-        onReject
+        onReject,
+        onDelete,
     } = props
     const styles = {
         fontSize: '1rem'
@@ -25,6 +26,7 @@ export function ActionsColumn(props: ActionsColumnProps): JSX.Element {
             isEmployee && status === 'Draft' && (
                 <>
                     <IconButton iconProps={{iconName:"Edit"}} style={styles} onClick={() => onEdit(item)}/>
+                    <IconButton iconProps={{iconName:"Cancel"}} style={styles} onClick={() => onDelete(item)}/>
                 </>
             ) ||
             isManager && status === 'In review' && (

@@ -7,4 +7,5 @@ export interface ActionsColumnProps {
     onEdit?: (item: JobItemDto) => void;
     onApprove: (item: JobItemDto) => void;
     onReject: (item: JobItemDto) => void;
+    onDelete: (item: JobItemDto) => void;
 }
