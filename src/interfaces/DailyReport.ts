@@ -7,4 +7,5 @@ export interface DailyReportDto {
     Status: StatusDailyReport;
     JobDate: Date;
     Tag?: string
+    ManagerUserProfileId: number;
 }

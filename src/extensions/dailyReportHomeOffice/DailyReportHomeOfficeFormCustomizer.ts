@@ -40,6 +40,7 @@ export default class DailyReportHomeOfficeFormCustomizer
     ManagerId: null,
     Status: 'Draft',
     JobDate: new Date(),
+    ManagerUserProfileId: null,
   }
 
   employeeProfile: Profile
@@ -53,14 +54,18 @@ export default class DailyReportHomeOfficeFormCustomizer
   public async onInit(): Promise<void> {
     // Add your custom initialization to this method. The framework will wait
     // for the returned promise to resolve before rendering the form.
-    const {email: currentUserEmail} = this.context.pageContext.user
+    const {loginName: currentUserLoginName} = this.context.pageContext.user
+    
 
     if(this.displayMode === FormDisplayMode.New) {
-      this.employeeProfile = await this.getDataFromHierarquia({EMAIL_EMPLOYE: currentUserEmail})
+      this.employeeProfile = await this.getDataFromHierarquia({EMAIL_EMPLOYE: currentUserLoginName})
       this.managerProfile = await this.getDataFromHierarquia({EMAIL_EMPLOYE: this.employeeProfile.EMAIL_1ST_EVALUATOR})
 
       this.formData.EmployeeId = this.employeeProfile.Id
       this.formData.ManagerId = this.managerProfile.Id
+
+      const {Id: ManagerProfileId} =  await this.ensureUserByLoginName(this.managerProfile.EMAIL_EMPLOYE)
+      this.formData.ManagerUserProfileId = ManagerProfileId 
 
       this.isEmployee = true
       this.isManager = false
@@ -75,8 +80,8 @@ export default class DailyReportHomeOfficeFormCustomizer
       this.formData.EmployeeId = this.employeeProfile.Id
       this.formData.ManagerId = this.managerProfile.Id
 
-      this.isEmployee = this.employeeProfile.EMAIL_EMPLOYE === currentUserEmail
-      this.isManager = this.managerProfile.EMAIL_EMPLOYE === currentUserEmail           
+      this.isEmployee = this.employeeProfile.EMAIL_EMPLOYE === currentUserLoginName
+      this.isManager = this.managerProfile.EMAIL_EMPLOYE === currentUserLoginName           
     }
 
     Log.info(LOG_SOURCE, 'Activated DailyReportHomeOfficeFormCustomizer with properties:');
@@ -114,6 +119,18 @@ export default class DailyReportHomeOfficeFormCustomizer
     // You MUST call this.formClosed() after you close the form.
     this.formClosed();
   }*/
+
+  private async ensureUserByLoginName(loginName: string): Promise<Profile> {
+    const response = await this.context.spHttpClient.post(`${this.context.pageContext.site.absoluteUrl}/_api/web/ensureuser`,
+      SPHttpClient.configurations.v1,
+      {
+        body: JSON.stringify({
+          'logonName': loginName
+        })
+      })
+
+    return await response.json()
+  }
 
   private async getDataFromHierarquia(data: Partial<Profile>): Promise<Profile> {
     let query = ''
@@ -174,6 +191,7 @@ export default class DailyReportHomeOfficeFormCustomizer
         ManagerId: dataToSave.ManagerId,
         Status: dataToSave.Status,
         JobDate: dataToSave.JobDate,
+        ManagerUserProfileId: dataToSave.ManagerUserProfileId,
       })
     })
 
@@ -259,6 +277,7 @@ export default class DailyReportHomeOfficeFormCustomizer
       Status: responseJson.Status,
       JobDate: new Date(responseJson.JobDate),
       Tag: responseJson['@odata.etag'],
+      ManagerUserProfileId: responseJson.ManagerUserProfileId,
     }
   }
 
