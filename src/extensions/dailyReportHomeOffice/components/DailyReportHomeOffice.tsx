@@ -273,7 +273,7 @@ export function DailyReportHomeOffice(props: DailyReportHomeOfficeProps): JSX.El
         <Stack
           styles={{  
             root: {
-              maxWidth: '70vw',
+              width: 'max-content',
             }
           }}>
           <JobList
