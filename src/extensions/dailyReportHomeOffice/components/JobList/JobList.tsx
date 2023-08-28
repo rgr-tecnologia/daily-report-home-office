@@ -34,6 +34,22 @@ export function JobList(props: JobListProps): JSX.Element {
 
     const columns: IColumn[] = [
         {
+            key: `column10`,
+            name: 'Actions',
+            minWidth: 100,
+            onRender: (item: JobItemAsString) => (
+                <ActionsColumn 
+                    isManager={isManager}
+                    isEmployee={isEmployee}
+                    onApprove={onApprove}
+                    onReject={onReject}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                    item={items.filter(i => i.Id === item.Id)[0]}
+                    status={status}
+                />)
+        },
+        {
             key: `column2`,
             name: 'Title',
             fieldName: 'Title',
@@ -50,6 +66,25 @@ export function JobList(props: JobListProps): JSX.Element {
             name: 'Status',
             fieldName: 'Status',
             minWidth: 100
+        },        
+        {
+            key: `column9`,
+            name: 'Overtime hours',
+            fieldName: 'QuantidadeHoras',
+            minWidth: 100,
+            onRender: (item => <>{item.QuantidadeHoras.toFixed(2)}</>)
+        },        
+        {
+            key: `column7`,
+            name: 'Start time',
+            fieldName: 'HoraInicio',
+            minWidth: 100
+        },
+        {
+            key: `column8`,
+            name: 'End time',
+            fieldName: 'HoraFim',
+            minWidth: 100
         },
         {
             key: `column5`,
@@ -65,41 +100,6 @@ export function JobList(props: JobListProps): JSX.Element {
             minWidth: 100,
             onRender: ({HoraExtra}) => <>{HoraExtra ? 'Yes' : 'No'}</>
         },
-        {
-            key: `column7`,
-            name: 'Start time',
-            fieldName: 'HoraInicio',
-            minWidth: 100
-        },
-        {
-            key: `column8`,
-            name: 'End time',
-            fieldName: 'HoraFim',
-            minWidth: 100
-        },
-        {
-            key: `column9`,
-            name: 'Overtime hours',
-            fieldName: 'QuantidadeHoras',
-            minWidth: 100,
-            onRender: (item => <>{item.QuantidadeHoras.toFixed(2)}</>)
-        },
-        {
-            key: `column10`,
-            name: 'Actions',
-            minWidth: 100,
-            onRender: (item: JobItemAsString) => (
-                <ActionsColumn 
-                    isManager={isManager}
-                    isEmployee={isEmployee}
-                    onApprove={onApprove}
-                    onReject={onReject}
-                    onEdit={onEdit}
-                    onDelete={onDelete}
-                    item={items.filter(i => i.Id === item.Id)[0]}
-                    status={status}
-                />)
-        }
     ]
 
 

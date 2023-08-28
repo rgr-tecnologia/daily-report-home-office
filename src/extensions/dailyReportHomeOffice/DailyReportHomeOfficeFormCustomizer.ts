@@ -55,7 +55,7 @@ export default class DailyReportHomeOfficeFormCustomizer
     // Add your custom initialization to this method. The framework will wait
     // for the returned promise to resolve before rendering the form.
     const {loginName: currentUserLoginName} = this.context.pageContext.user
-    
+    const isMemberOfRh = await this.isMemberOfGroup(139)    
 
     if(this.displayMode === FormDisplayMode.New) {
       this.employeeProfile = await this.getDataFromHierarquia({EMAIL_EMPLOYE: currentUserLoginName})
@@ -81,7 +81,7 @@ export default class DailyReportHomeOfficeFormCustomizer
       this.formData.ManagerId = this.managerProfile.Id
 
       this.isEmployee = this.employeeProfile.EMAIL_EMPLOYE === currentUserLoginName
-      this.isManager = this.managerProfile.EMAIL_EMPLOYE === currentUserLoginName           
+      this.isManager = (this.managerProfile.EMAIL_EMPLOYE === currentUserLoginName) || isMemberOfRh         
     }
 
     Log.info(LOG_SOURCE, 'Activated DailyReportHomeOfficeFormCustomizer with properties:');
@@ -162,6 +162,14 @@ export default class DailyReportHomeOfficeFormCustomizer
 
   private async getData(url: string): Promise<HttpClientResponse> {
     return await this.context.spHttpClient.get(url, SPHttpClient.configurations.v1)
+  }
+
+  private async getCurrentUserGroups(): Promise<any> {
+    const queryUrl = `${this.getApiUrl()}/_api/web/currentuser/groups`;
+    const siteGroupsData = await this.context.spHttpClient.get(queryUrl, SPHttpClient.configurations.v1);
+    const siteGroups = (await siteGroupsData.json()).value;
+
+    return siteGroups
   }
 
   private async saveOnMainList(data: DailyReportDto, reload: boolean): Promise<DailyReportDto> {
@@ -258,6 +266,12 @@ export default class DailyReportHomeOfficeFormCustomizer
     else {
       await Promise.reject(response.statusText)
     }
+  }
+
+  private async isMemberOfGroup(groupId: number): Promise<boolean> {
+    const userGroups = await this.getCurrentUserGroups()
+    const group = userGroups.find((group: {Id: number}) => group.Id === groupId)
+    return !!group
   }
 
   private async getItemsFromMainList(id: number): Promise<DailyReportDto> {
