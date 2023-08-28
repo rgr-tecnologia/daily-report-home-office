@@ -7,8 +7,9 @@
       "pageUrl": "https://cjinter.sharepoint.com/sites/newportal/_layouts/15/SPListForm.aspx",
       "formCustomizer": {
         "componentId": "4a7f9032-8e66-421e-bafe-a1e03d0c4fb7",
-        "PageType": 8,
-        "RootFolder": "/sites/newportal/Lists/DailyReportHomeOffice"
+        "PageType": 4,
+        "RootFolder": "/sites/newportal/Lists/DailyReportHomeOffice",
+        "ID": 115
       }
     },
     "dailyReportHomeOffice_NewForm": {

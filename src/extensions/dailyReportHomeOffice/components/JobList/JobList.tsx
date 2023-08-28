@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { DetailsList, IColumn } from "office-ui-fabric-react";
+import { DetailsList, IColumn, IStyle, Text } from "office-ui-fabric-react";
 import { JobItemAsString, JobListProps } from './JobList.props';
 import { SelectionMode } from '@fluentui/react';
 import { ActionsColumn } from '../ActionsColumn/ActionsColumn';
@@ -65,7 +65,48 @@ export function JobList(props: JobListProps): JSX.Element {
             key: `column4`,
             name: 'Status',
             fieldName: 'Status',
-            minWidth: 100
+            minWidth: 100,
+            onRender: (item: JobItemAsString) => {
+                let style: IStyle = {
+                    borderRadius: '1rem',
+                    padding: '0.25rem 0.5rem',
+                    margin: '0.5rem',
+                    height: '1.5rem',
+                }
+
+                if(item.Status === 'Approved') {
+                    style = {
+                        ...style,
+                        color: '#437406',
+                        backgroundColor: '#CFFFB8',                        
+                    }
+                }
+                else if(item.Status === 'Rejected') {
+                    style = {
+                        ...style,
+                        color: '#8F6200',
+                        backgroundColor: '#FFEBC0',                        
+                    }
+
+                }
+                else if(item.Status === 'In review') {
+                    style = {
+                        ...style,
+                        color: '#0068B8',
+                        backgroundColor: '#D4E7F6',                        
+                    }
+
+                }
+
+            return <>
+                <Text 
+                    variant='small'
+                    styles={{
+                    root: style
+                }}>{
+                    item.Status
+                }</Text>
+            </>}
         },        
         {
             key: `column9`,
