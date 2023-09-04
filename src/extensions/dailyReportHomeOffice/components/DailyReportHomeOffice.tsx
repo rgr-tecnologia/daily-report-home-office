@@ -172,6 +172,7 @@ export function DailyReportHomeOffice(props: DailyReportHomeOfficeProps): JSX.El
     const dataToUpdate = {
       ...jobItem,
       Status: 'Approved' as const,
+      ObservacaoGestor: ''
     }
 
     const index = findIndex(jobItems, (item: JobItemDto) => item.Id === jobItem.Id)
