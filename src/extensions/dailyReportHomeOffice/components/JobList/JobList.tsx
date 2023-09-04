@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { DetailsList, IColumn, IStyle, Text } from "office-ui-fabric-react";
+import { DetailsList, IColumn, IStyle, Text, TooltipHost, TooltipOverflowMode } from "office-ui-fabric-react";
 import { JobItemAsString, JobListProps } from './JobList.props';
 import { SelectionMode } from '@fluentui/react';
 import { ActionsColumn } from '../ActionsColumn/ActionsColumn';
@@ -52,19 +52,34 @@ export function JobList(props: JobListProps): JSX.Element {
         {
             key: `column2`,
             name: 'Title',
-            fieldName: 'Title',
-            minWidth: 100
+            minWidth: 100,
+            onRender: (item) => {
+                return (
+                    <TooltipHost 
+                        content={item.Title}
+                        overflowMode={TooltipOverflowMode.Parent}>
+                        <Text>{item.Title}</Text>
+                    </TooltipHost>
+                )
+            }
         },
         {
             key: `column3`,
             name: 'Description',
-            fieldName: 'Description',
-            minWidth: 100
+            minWidth: 100,
+            onRender: (item) => {
+                return (
+                    <TooltipHost 
+                        content={item.Description}
+                        overflowMode={TooltipOverflowMode.Parent}>
+                        <Text>{item.Description}</Text>
+                    </TooltipHost>
+                )
+            }
         },
         {
             key: `column4`,
             name: 'Status',
-            fieldName: 'Status',
             minWidth: 100,
             onRender: (item: JobItemAsString) => {
                 let style: IStyle = {
@@ -109,38 +124,52 @@ export function JobList(props: JobListProps): JSX.Element {
             </>}
         },        
         {
-            key: `column9`,
+            key: `column5`,
             name: 'Overtime hours',
-            fieldName: 'QuantidadeHoras',
             minWidth: 100,
             onRender: (item => <>{item.QuantidadeHoras.toFixed(2)}</>)
         },        
         {
-            key: `column7`,
+            key: `column6`,
             name: 'Start time',
             fieldName: 'HoraInicio',
             minWidth: 100
         },
         {
-            key: `column8`,
+            key: `column7`,
             name: 'End time',
             fieldName: 'HoraFim',
             minWidth: 100
         },
         {
-            key: `column5`,
+            key: `column9`,
             name: 'Home office?',
             fieldName: 'HomeOffice',
             minWidth: 100,
             onRender: ({HomeOffice}) => <>{HomeOffice ? 'Yes' : 'No'}</>
         },
         {
-            key: `column6`,
+            key: `column9`,
             name: 'Overtime?',
-            fieldName: 'HoraExtra',
             minWidth: 100,
             onRender: ({HoraExtra}) => <>{HoraExtra ? 'Yes' : 'No'}</>
         },
+        {
+            key: `column10`,
+            name: 'Manager\'s note',
+            minWidth: 100,
+            onRender: (item) => {
+                return (
+                    <TooltipHost 
+                        content={item.ObservacaoGestor}
+                        overflowMode={TooltipOverflowMode.Parent}>
+                        <Text>{item.ObservacaoGestor}</Text>
+                    </TooltipHost>
+                )
+            }
+        },
+
+        
     ]
 
 

@@ -8,4 +8,5 @@ export interface DailyReportDto {
     JobDate: Date;
     Tag?: string
     ManagerUserProfileId: number;
+    ObservacaoGestor: string;
 }

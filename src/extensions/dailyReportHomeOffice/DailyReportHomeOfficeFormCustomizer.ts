@@ -41,6 +41,7 @@ export default class DailyReportHomeOfficeFormCustomizer
     Status: 'Draft',
     JobDate: new Date(),
     ManagerUserProfileId: null,
+    ObservacaoGestor: null
   }
 
   employeeProfile: Profile
@@ -221,50 +222,40 @@ export default class DailyReportHomeOfficeFormCustomizer
     }
   }
 
-  private async saveOnSecondaryList(data: JobItemDto): Promise<CreateResponseJobItem> {
-    const {Id, Tag, ...dataToSave} = data
-    let apiUrl = ''
-    let method = ''
-
-    if(Id) {
-      apiUrl = `${this.getApiUrl()}/_api/web/lists(guid'${this.dailyReportItemsListId}')/items(${Id})`
-      method = 'MERGE'
-    }
-    else {
-      apiUrl = `${this.getApiUrl()}/_api/web/lists(guid'${this.dailyReportItemsListId}')/items`
-      method = 'POST'
-    }    
-
-    const response = await this.context.spHttpClient.fetch(apiUrl, SPHttpClient.configurations.v1, {
-      method: method,
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "odata-version": "",
-        "IF-MATCH": Tag
-      },
-      body: JSON.stringify({
-        Title: dataToSave.Title,
-        Description: dataToSave.Description,
-        Status: dataToSave.Status,
-        HoraExtra: dataToSave.HoraExtra,
-        DailyReportHomeOfficeId: dataToSave.DailyReportHomeOfficeId,
-        QuantidadeHoras: dataToSave.QuantidadeHoras,
-        HomeOffice: dataToSave.HomeOffice,
-        HoraInicio: dataToSave.HoraInicio,
-        HoraFim: dataToSave.HoraFim,
-      })
-    })
-
-    if(response.ok) {
-      const responseJson = await response.json()
-      return {
-        ...responseJson,
-        Tag: responseJson['odata.etag'],
+  private async saveOnSecondaryList(data: JobItemDto): Promise<CreateResponseJobItem | undefined> {
+    const { Id, Tag, ...dataToSave } = data;
+    const apiUrl = Id
+      ? `${this.getApiUrl()}/_api/web/lists(guid'${this.dailyReportItemsListId}')/items(${Id})`
+      : `${this.getApiUrl()}/_api/web/lists(guid'${this.dailyReportItemsListId}')/items`;
+  
+    const method = Id ? 'MERGE' : 'POST';
+  
+    try {
+      const response = await this.context.spHttpClient.post(apiUrl, SPHttpClient.configurations.v1, {
+        method,
+        headers: {
+          Accept: 'application/json;odata=verbose',
+          'Content-Type': 'application/json',
+          'odata-version': '',
+          'IF-MATCH': '*',
+          'X-HTTP-Method': method,
+        },
+        body: JSON.stringify({
+          ...dataToSave,
+        }),
+      });
+  
+      if (response.status === 204) {
+        return 
+      } else {
+        const responseJson = await response.json();
+        return {
+          ...responseJson,
+          Tag: responseJson['odata.etag'],
+        };
       }
-    }
-    else {
-      await Promise.reject(response.statusText)
+    } catch (error) {
+      throw error;
     }
   }
 
@@ -292,6 +283,7 @@ export default class DailyReportHomeOfficeFormCustomizer
       JobDate: new Date(responseJson.JobDate),
       Tag: responseJson['@odata.etag'],
       ManagerUserProfileId: responseJson.ManagerUserProfileId,
+      ObservacaoGestor: responseJson.ObservacaoGestor
     }
   }
 
@@ -318,6 +310,7 @@ export default class DailyReportHomeOfficeFormCustomizer
         HoraInicio: new Date(item.HoraInicio),
         HoraFim: new Date(item.HoraFim),
         Tag: item['@odata.etag'],
+        ObservacaoGestor: item.ObservacaoGestor
       }
     })
   }

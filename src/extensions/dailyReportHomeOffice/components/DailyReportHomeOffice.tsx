@@ -3,7 +3,7 @@ import { DailyReportHomeOfficeProps } from './DailyReportHomeOfficeProps';
 import { Stack } from '@fluentui/react';
 import { JobList } from './JobList/JobList';
 import { JobItemDto } from '../../../interfaces/JobItem';
-import { DefaultButton, Dialog, DialogFooter, DialogType, PrimaryButton, Text } from 'office-ui-fabric-react';
+import { DefaultButton, Dialog, DialogFooter, DialogType, PrimaryButton, Text, TextField } from 'office-ui-fabric-react';
 import { DailyReportDto } from '../../../interfaces/DailyReport';
 import { Form } from './Form/Form';
 import { NewForm } from './NewForm/NewForm';
@@ -35,15 +35,21 @@ export function DailyReportHomeOffice(props: DailyReportHomeOfficeProps): JSX.El
     HoraFim: new Date(),
     DailyReportHomeOfficeId: null,
     QuantidadeHoras: 0,
-    HomeOffice: false
+    HomeOffice: false,
+    ObservacaoGestor: null
   }
 
   const [jobItems, setJobItems] = React.useState<JobItemDto[]>(items)
   const [currentItem, setCurrentItem] = React.useState<JobItemDto>(baseItem)
-  const [errorMessage, setErrorMessage] = React.useState<string>('')
+  const [errorMessage, setErrorMessage] = React.useState<string>()
   const [currentFormData, setCurrentFormData] = React.useState<DailyReportDto>(formData)
-  const [isDialogHidden, setIssDialogHidden] = React.useState<boolean>(true)
-  const [selectedItem, setSelectedItem] = React.useState<JobItemDto>(baseItem)
+  const [isDialogHidden, setIsDialogHidden] = React.useState<boolean>(true)
+  const [isRejectDialogHidden, setIsRejectDialogHidden] = React.useState<boolean>(true)
+  const [itemToDelete, setItemToDelete] = React.useState<JobItemDto>()
+  const [itemToReject, setItemToReject] = React.useState<JobItemDto>()
+  const [rejectMessage, setRejectMessage] = React.useState<string>()
+
+  
 
   const findIndex = (array: JobItemDto[], criteria: (item: JobItemDto) => boolean): number => {
     let index = -1;
@@ -181,7 +187,7 @@ export function DailyReportHomeOffice(props: DailyReportHomeOfficeProps): JSX.El
   const onReject = async (jobItem: JobItemDto): Promise<void> => {
     const dataToUpdate = {
       ...jobItem,
-      Status: 'Rejected'  as const,
+      Status: 'Rejected' as const,
     }
 
     const index = findIndex(jobItems, (item: JobItemDto) => item.Id === jobItem.Id)
@@ -282,11 +288,14 @@ export function DailyReportHomeOffice(props: DailyReportHomeOfficeProps): JSX.El
             isEmployee={isEmployee}
             status={Status}
             onApprove={opApprove}
-            onReject={onReject}
+            onReject={(item: JobItemDto) : void => {
+              setItemToReject(item)
+              setIsRejectDialogHidden(false)
+            }}
             onEdit={onEdit}
             onDelete={(item: JobItemDto) : void => {
-              setSelectedItem(item)
-              setIssDialogHidden(false)
+              setItemToDelete(item)
+              setIsDialogHidden(false)
             }}/>
         </Stack>
       </Stack>
@@ -296,17 +305,41 @@ export function DailyReportHomeOffice(props: DailyReportHomeOfficeProps): JSX.El
           {
             type: DialogType.normal,
             title: 'Delete activity?',
-            closeButtonAriaLabel: 'Close',
+            closeButtonAriaLabel: 'Cancel',
             subText: 'Do you want to delete this activity? (This action cannot be undone)',
           }
         }>
           <DialogFooter>
             <PrimaryButton onClick={async () => {
-              setIssDialogHidden(true)
-              await onDelete(selectedItem)
-            }} text="Send" />
-            <DefaultButton onClick={() => setIssDialogHidden(true)} text="Don't send" />
+              setIsDialogHidden(true)
+              await onDelete(itemToDelete)
+            }} text="Delete" />
+            <DefaultButton onClick={() => setIsDialogHidden(true)} text="Cancel" />
           </DialogFooter>
+        </Dialog>
+
+        <Dialog 
+          hidden={isRejectDialogHidden}
+          dialogContentProps={
+            {
+              type: DialogType.normal,
+              title: 'Reject activity?',
+              closeButtonAriaLabel: 'Cancel',
+              subText: 'Do you want to Reject this activity? (Please, add an observation)',
+            }
+          }>
+            <TextField multiline={true}
+              value={rejectMessage} 
+              onChange={(event, newValue) => setRejectMessage(newValue)}/>
+              <PrimaryButton onClick={async () => {
+                setIsRejectDialogHidden(true)
+                await onReject({
+                  ...itemToReject,
+                  ObservacaoGestor: rejectMessage
+                })
+                setRejectMessage(null)
+              }} text="Reject" />
+              <DefaultButton onClick={() => setIsRejectDialogHidden(true)} text="Cancel" />
         </Dialog>
     </>
   );
