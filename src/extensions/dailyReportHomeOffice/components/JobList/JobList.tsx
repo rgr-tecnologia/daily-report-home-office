@@ -133,13 +133,15 @@ export function JobList(props: JobListProps): JSX.Element {
             key: `column6`,
             name: 'Start time',
             fieldName: 'HoraInicio',
-            minWidth: 100
+            minWidth: 100,
+            onRender: ({HoraExtra, HoraInicio}) => <>{HoraExtra ? "" : HoraInicio}</>
         },
         {
             key: `column7`,
             name: 'End time',
             fieldName: 'HoraFim',
-            minWidth: 100
+            minWidth: 100,
+            onRender: ({HoraExtra, HoraInicio}) => <>{HoraExtra ? "" : HoraInicio}</>
         },
         {
             key: `column9`,

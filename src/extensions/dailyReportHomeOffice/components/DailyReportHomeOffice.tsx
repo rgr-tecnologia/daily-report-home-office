@@ -45,11 +45,11 @@ export function DailyReportHomeOffice(props: DailyReportHomeOfficeProps): JSX.El
   const [currentFormData, setCurrentFormData] = React.useState<DailyReportDto>(formData)
   const [isDialogHidden, setIsDialogHidden] = React.useState<boolean>(true)
   const [isRejectDialogHidden, setIsRejectDialogHidden] = React.useState<boolean>(true)
+  const [isApproveDialogueHidden, setIsApproveDialogueHidden] = React.useState<boolean>(true)
   const [itemToDelete, setItemToDelete] = React.useState<JobItemDto>()
   const [itemToReject, setItemToReject] = React.useState<JobItemDto>()
-  const [rejectMessage, setRejectMessage] = React.useState<string>()
-
-  
+  const [itemToApprove, setItemToApprove] = React.useState<JobItemDto>()
+  const [observacaoGestor, setObservacaoGestor] = React.useState<string>()  
 
   const findIndex = (array: JobItemDto[], criteria: (item: JobItemDto) => boolean): number => {
     let index = -1;
@@ -172,7 +172,6 @@ export function DailyReportHomeOffice(props: DailyReportHomeOfficeProps): JSX.El
     const dataToUpdate = {
       ...jobItem,
       Status: 'Approved' as const,
-      ObservacaoGestor: ''
     }
 
     const index = findIndex(jobItems, (item: JobItemDto) => item.Id === jobItem.Id)
@@ -288,7 +287,10 @@ export function DailyReportHomeOffice(props: DailyReportHomeOfficeProps): JSX.El
             isManager={isManager}
             isEmployee={isEmployee}
             status={Status}
-            onApprove={opApprove}
+            onApprove={(item: JobItemDto) : void => {
+              setItemToApprove(item)
+              setIsApproveDialogueHidden(false)
+            }}
             onReject={(item: JobItemDto) : void => {
               setItemToReject(item)
               setIsRejectDialogHidden(false)
@@ -326,21 +328,44 @@ export function DailyReportHomeOffice(props: DailyReportHomeOfficeProps): JSX.El
               type: DialogType.normal,
               title: 'Reject activity?',
               closeButtonAriaLabel: 'Cancel',
-              subText: 'Do you want to Reject this activity? (Please, add an observation)',
+              subText: 'Do you want to Reject this activity? (Please add a note)',
             }
           }>
             <TextField multiline={true}
-              value={rejectMessage} 
-              onChange={(event, newValue) => setRejectMessage(newValue)}/>
+              value={observacaoGestor} 
+              onChange={(event, newValue) => setObservacaoGestor(newValue)}/>
               <PrimaryButton onClick={async () => {
                 setIsRejectDialogHidden(true)
                 await onReject({
                   ...itemToReject,
-                  ObservacaoGestor: rejectMessage
+                  ObservacaoGestor: observacaoGestor
                 })
-                setRejectMessage(null)
+                setObservacaoGestor(null)
               }} text="Reject" />
               <DefaultButton onClick={() => setIsRejectDialogHidden(true)} text="Cancel" />
+        </Dialog>
+        <Dialog 
+          hidden={isApproveDialogueHidden}
+          dialogContentProps={
+            {
+              type: DialogType.normal,
+              title: 'Approve activity?',
+              closeButtonAriaLabel: 'Cancel',
+              subText: 'Do you want to Approve this activity? (You may add a note)',
+            }
+          }>
+            <TextField multiline={true}
+              value={observacaoGestor} 
+              onChange={(event, newValue) => setObservacaoGestor(newValue)}/>
+              <PrimaryButton onClick={async () => {
+                setIsApproveDialogueHidden(true)
+                await opApprove({
+                  ...itemToApprove,
+                  ObservacaoGestor: observacaoGestor
+                })
+                setObservacaoGestor(null)
+              }} text="Approve" />
+              <DefaultButton onClick={() => setIsApproveDialogueHidden(true)} text="Cancel" />
         </Dialog>
     </>
   );
