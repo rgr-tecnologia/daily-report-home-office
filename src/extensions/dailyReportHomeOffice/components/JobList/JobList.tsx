@@ -27,8 +27,8 @@ export function JobList(props: JobListProps): JSX.Element {
     const formatJobItemsDateProperties = (items: JobItemDto[]): JobItemAsString[] => items.map(item => {
         return {
             ...item,
-            HoraInicio: item.HoraInicio.toLocaleTimeString(),
-            HoraFim: item.HoraFim.toLocaleTimeString()
+            HoraInicio: item.HoraExtra ? item.HoraInicio.toLocaleTimeString() : '',
+            HoraFim: item.HoraExtra ? item.HoraFim.toLocaleTimeString() : ''
         }
     })    
 
@@ -134,14 +134,12 @@ export function JobList(props: JobListProps): JSX.Element {
             name: 'Start time',
             fieldName: 'HoraInicio',
             minWidth: 100,
-            onRender: ({HoraExtra, HoraInicio}) => <>{HoraExtra ? "" : HoraInicio}</>
         },
         {
             key: `column7`,
             name: 'End time',
             fieldName: 'HoraFim',
             minWidth: 100,
-            onRender: ({HoraExtra, HoraInicio}) => <>{HoraExtra ? "" : HoraInicio}</>
         },
         {
             key: `column9`,
