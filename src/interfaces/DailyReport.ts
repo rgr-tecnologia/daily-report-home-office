@@ -6,7 +6,6 @@ export interface DailyReportDto {
     ManagerId: number;
     Status: StatusDailyReport;
     JobDate: Date;
-    Tag?: string
     ManagerUserProfileId: number;
     ObservacaoGestor: string;
 }

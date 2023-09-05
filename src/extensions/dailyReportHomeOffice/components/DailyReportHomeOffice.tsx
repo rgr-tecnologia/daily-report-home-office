@@ -90,7 +90,7 @@ export function DailyReportHomeOffice(props: DailyReportHomeOfficeProps): JSX.El
   const onAddJobItem = async (jobItem: JobItemDto): Promise<void> => {
     if(!validateJobItem(jobItem)) return
 
-    let saveFormResponse = currentFormData;
+    let saveFormResponse: DailyReportDto = null;
     if(currentFormData.Id === null) {
       saveFormResponse = await onSave(currentFormData, false)
       setCurrentFormData(saveFormResponse)
@@ -109,11 +109,7 @@ export function DailyReportHomeOffice(props: DailyReportHomeOfficeProps): JSX.El
 
     const responseSecondary = await onSaveSecondary(itemToAdd)
 
-    setJobItems([...jobItems, {
-      ...responseSecondary,
-      HoraInicio: new Date(responseSecondary.HoraInicio),
-      HoraFim: new Date(responseSecondary.HoraFim)
-    }])
+    setJobItems([...jobItems, responseSecondary])
     setCurrentItem({...baseItem})
   }
 
@@ -211,7 +207,7 @@ export function DailyReportHomeOffice(props: DailyReportHomeOfficeProps): JSX.El
 
     setJobItems(result)
     if(item.Id) {
-      await onDeleteSecondary(item.Id, item.Tag)
+      await onDeleteSecondary(item.Id)
     }
   }
 

@@ -11,7 +11,6 @@ export interface CreateResponseJobItem {
     HomeOffice: boolean;
     HoraInicio: string;
     HoraFim: string;
-    "odata.etag": string;
     ObservacaoGestor: string;
 }
 
@@ -26,7 +25,6 @@ export interface GetResponseJobItem {
     HomeOffice: boolean;
     HoraInicio: string;
     HoraFim: string;
-    "@odata.etag": string;
     ObservacaoGestor: string;
 }
 
@@ -41,6 +39,5 @@ export interface JobItemDto {
     HomeOffice: boolean;
     HoraInicio: Date;
     HoraFim: Date;
-    Tag?: string;
     ObservacaoGestor: string;
 }

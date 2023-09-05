@@ -12,7 +12,7 @@ import { DailyReportHomeOfficeProps } from './components/DailyReportHomeOfficePr
 import { Profile } from '../../interfaces/Profile';
 
 import { SPHttpClient, HttpClientResponse } from '@microsoft/sp-http';  
-import { JobItemDto, GetResponseJobItem, CreateResponseJobItem } from '../../interfaces/JobItem';
+import { JobItemDto, GetResponseJobItem } from '../../interfaces/JobItem';
 import { DailyReportDto } from '../../interfaces/DailyReport';
 
 /**
@@ -174,7 +174,7 @@ export default class DailyReportHomeOfficeFormCustomizer
   }
 
   private async saveOnMainList(data: DailyReportDto, reload: boolean): Promise<DailyReportDto> {
-    const {Id, Tag, ...dataToSave} = data
+    const {Id, ...dataToSave} = data
     let apiUrl = ''
     let method = ''
 
@@ -193,7 +193,7 @@ export default class DailyReportHomeOfficeFormCustomizer
         "Accept": "application/json",
         "Content-Type": "application/json",
         "odata-version": "",
-        "IF-MATCH": Tag
+        "IF-MATCH": '*'
       },
       body: JSON.stringify({
         EmployeeId: dataToSave.EmployeeId,
@@ -213,7 +213,6 @@ export default class DailyReportHomeOfficeFormCustomizer
         const responseJson = await response.json()
         return  {
           ...responseJson,
-          Tag: responseJson['odata.etag'],
         }
       }      
     }
@@ -222,8 +221,8 @@ export default class DailyReportHomeOfficeFormCustomizer
     }
   }
 
-  private async saveOnSecondaryList(data: JobItemDto): Promise<CreateResponseJobItem | undefined> {
-    const { Id, Tag, ...dataToSave } = data;
+  private async saveOnSecondaryList(data: JobItemDto): Promise<JobItemDto> {
+    const { Id, ...dataToSave } = data;
     const apiUrl = Id
       ? `${this.getApiUrl()}/_api/web/lists(guid'${this.dailyReportItemsListId}')/items(${Id})`
       : `${this.getApiUrl()}/_api/web/lists(guid'${this.dailyReportItemsListId}')/items`;
@@ -232,12 +231,11 @@ export default class DailyReportHomeOfficeFormCustomizer
   
     try {
       const response = await this.context.spHttpClient.post(apiUrl, SPHttpClient.configurations.v1, {
-        method,
         headers: {
-          Accept: 'application/json;odata=verbose',
-          'Content-Type': 'application/json',
-          'odata-version': '',
-          'IF-MATCH': '*',
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "odata-version": "",
+          "IF-MATCH": '*',
           'X-HTTP-Method': method,
         },
         body: JSON.stringify({
@@ -251,7 +249,8 @@ export default class DailyReportHomeOfficeFormCustomizer
         const responseJson = await response.json();
         return {
           ...responseJson,
-          Tag: responseJson['odata.etag'],
+          HoraInicio: new Date(responseJson.HoraInicio),
+          HoraFim: new Date(responseJson.HoraFim),
         };
       }
     } catch (error) {
@@ -281,7 +280,6 @@ export default class DailyReportHomeOfficeFormCustomizer
       ManagerId: responseJson.ManagerId,
       Status: responseJson.Status,
       JobDate: new Date(responseJson.JobDate),
-      Tag: responseJson['@odata.etag'],
       ManagerUserProfileId: responseJson.ManagerUserProfileId,
       ObservacaoGestor: responseJson.ObservacaoGestor
     }
@@ -299,23 +297,14 @@ export default class DailyReportHomeOfficeFormCustomizer
 
     return value.map((item) => {
       return {
-        Id: item.Id,
-        Title: item.Title,
-        Description: item.Description,
-        Status: item.Status,
-        HoraExtra: item.HoraExtra,
-        DailyReportHomeOfficeId: item.DailyReportHomeOfficeId,
-        QuantidadeHoras: item.QuantidadeHoras,
-        HomeOffice: item.HomeOffice,
+        ...item,
         HoraInicio: new Date(item.HoraInicio),
         HoraFim: new Date(item.HoraFim),
-        Tag: item['@odata.etag'],
-        ObservacaoGestor: item.ObservacaoGestor
       }
     })
   }
 
-  private async deleteItemFromSecondaryList(id: number, tag: string): Promise<void> { 
+  private async deleteItemFromSecondaryList(id: number): Promise<void> { 
     const apiUrl = `${this.getApiUrl()}/_api/web/lists(guid'${this.dailyReportItemsListId}')/items(${id})`
 
     const response = await this.context.spHttpClient.fetch(apiUrl, SPHttpClient.configurations.v1, {
@@ -324,7 +313,7 @@ export default class DailyReportHomeOfficeFormCustomizer
         "Accept": "application/json",
         "Content-Type": "application/json",
         "odata-version": "",
-        "IF-MATCH": tag
+        "IF-MATCH": '*'
       },
     })
 
