@@ -192,7 +192,6 @@ export default class DailyReportHomeOfficeFormCustomizer
       headers: {
         "Accept": "application/json",
         "Content-Type": "application/json",
-        "odata-version": "",
         "IF-MATCH": '*'
       },
       body: JSON.stringify({
@@ -234,7 +233,6 @@ export default class DailyReportHomeOfficeFormCustomizer
         headers: {
           "Accept": "application/json",
           "Content-Type": "application/json",
-          "odata-version": "",
           "IF-MATCH": '*',
           'X-HTTP-Method': method,
         },
@@ -312,7 +310,6 @@ export default class DailyReportHomeOfficeFormCustomizer
       headers: {
         "Accept": "application/json",
         "Content-Type": "application/json",
-        "odata-version": "",
         "IF-MATCH": '*'
       },
     })
