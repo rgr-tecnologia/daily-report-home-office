@@ -90,7 +90,7 @@ export function DailyReportHomeOffice(props: DailyReportHomeOfficeProps): JSX.El
   const onAddJobItem = async (jobItem: JobItemDto): Promise<void> => {
     if(!validateJobItem(jobItem)) return
 
-    let saveFormResponse: DailyReportDto = null;
+    let saveFormResponse: DailyReportDto = currentFormData;
     if(currentFormData.Id === null) {
       saveFormResponse = await onSave(currentFormData, false)
       setCurrentFormData(saveFormResponse)
