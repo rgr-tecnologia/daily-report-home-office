@@ -53,19 +53,38 @@ export function NewForm(props: NewFormProps): JSX.Element {
         setJobItemData(baseData)
     }  
 
+    const validateTime = (time: Date) => {
+        if(isNaN(time.getTime())) {
+            return false
+        }
+        return true
+    }
+
     const onChangeHoraInicio = (
         event: React.FormEvent<IComboBox>, 
-        time: Date): void => setJobItemData({
-        ...jobItemData,
-        HoraInicio: time
-    })
+        time: Date): void => {
+            const validationResult = validateTime(time)
+
+            if(!validationResult) return
+            setJobItemData({
+                ...jobItemData,
+                HoraInicio: time
+            })
+        }
 
     const onChangeHoraFim = (
         event: React.FormEvent<IComboBox>, 
-        time: Date): void => setJobItemData({
-        ...jobItemData,
-        HoraFim: time
-    })
+        time: Date): void => {
+            const validationResult = validateTime(time)
+
+            if(!validationResult) return            
+            setJobItemData({
+                ...jobItemData,
+                HoraFim: time
+            })
+        }
+            
+    
 
     return (
         <>
@@ -91,8 +110,15 @@ export function NewForm(props: NewFormProps): JSX.Element {
                     <Checkbox checked={jobItemData.HomeOffice} label='Home Office' onChange={onChangeHomeOffice}/>
                     <Checkbox checked={jobItemData.HoraExtra} label='Overtime' onChange={onChangeHoraExtra}/>                    
                     {jobItemData.HoraExtra && (<>
-                    <TimePicker value={jobItemData.HoraInicio} label='Start time' onChange={onChangeHoraInicio}/>
-                    <TimePicker value={jobItemData.HoraFim} label='End time' onChange={onChangeHoraFim}/>
+                    <TimePicker 
+                        value={jobItemData.HoraInicio} 
+                        label='Start time' onChange={onChangeHoraInicio}
+                        required/>
+                    <TimePicker 
+                        value={jobItemData.HoraFim} 
+                        label='End time' 
+                        onChange={onChangeHoraFim}
+                        required/>
                 </>)}
                 </Stack>
                 <Stack 
