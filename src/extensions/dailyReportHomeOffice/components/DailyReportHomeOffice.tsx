@@ -7,6 +7,7 @@ import { DefaultButton, Dialog, DialogFooter, DialogType, PrimaryButton, Text, T
 import { DailyReportDto } from '../../../interfaces/DailyReport';
 import { Form } from './Form/Form';
 import { NewForm } from './NewForm/NewForm';
+import styles from './DailyReportHomeOffice.module.scss';
 
 export function DailyReportHomeOffice(props: DailyReportHomeOfficeProps): JSX.Element {
   const {
@@ -225,7 +226,7 @@ export function DailyReportHomeOffice(props: DailyReportHomeOfficeProps): JSX.El
           tokens={{childrenGap: 'm'}}
           styles={{  
             root: {
-              maxWidth: '35vw',
+              margin: '2rem 2rem 0 2rem',
             }
           }}>
           <Text styles={{
@@ -266,10 +267,11 @@ export function DailyReportHomeOffice(props: DailyReportHomeOfficeProps): JSX.El
         </Stack>
       </Stack>
       <Stack
+        className={styles.mobile}
         styles={{  
           root: {
-            alignItems: 'center',
-            marginTop: '2rem'
+            marginTop: '2rem',
+            overflow: 'auto',
           }
         }}>
         <Stack

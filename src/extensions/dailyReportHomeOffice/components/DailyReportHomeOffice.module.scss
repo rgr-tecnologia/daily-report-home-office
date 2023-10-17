@@ -9,3 +9,9 @@
     font-family: $ms-font-family-fallbacks;
   }
 }
+
+.mobile {
+  @media screen and (min-width: 768px) {
+    align-items: center;
+  }
+}
