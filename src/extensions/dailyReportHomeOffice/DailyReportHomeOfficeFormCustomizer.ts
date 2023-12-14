@@ -126,7 +126,7 @@ export default class DailyReportHomeOfficeFormCustomizer
       SPHttpClient.configurations.v1,
       {
         body: JSON.stringify({
-          'logonName': loginName
+          'logonName': 'reinaldo.gallardo@cjtrade.net'
         })
       })
 
