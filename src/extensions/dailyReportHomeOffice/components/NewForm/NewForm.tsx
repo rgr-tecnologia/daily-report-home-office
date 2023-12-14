@@ -153,10 +153,6 @@ export function NewForm(props: NewFormProps): JSX.Element {
             </>
           )}
         </Stack>
-        <Stack>
-          <TextField value={jobItemData.HoraInicio.toLocaleString()} />
-          <TextField value={jobItemData.HoraFim.toLocaleString()} />
-        </Stack>
         <Stack
           tokens={{
             maxWidth: "fit-content",
