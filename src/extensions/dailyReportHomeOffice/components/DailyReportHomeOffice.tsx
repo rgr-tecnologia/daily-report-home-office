@@ -78,13 +78,16 @@ export function DailyReportHomeOffice(
   };
 
   const validateJobItem = (jobItem: JobItemDto): boolean => {
-    if (jobItem.HoraExtra === false && jobItem.HomeOffice === false) {
+    const { HoraExtra, HomeOffice, Title, Description, HoraInicio, HoraFim } =
+      jobItem;
+
+    if (HoraExtra === false && HomeOffice === false) {
       setErrorMessage("Please, select Home office or Overtime");
       return false;
-    } else if (!jobItem.Title || !jobItem.Description) {
+    } else if (!Title || !Description) {
       setErrorMessage("Please, fill the Title and Description fields");
       return false;
-    } else if (jobItem.HoraInicio >= jobItem.HoraFim) {
+    } else if (HoraExtra === true && HoraInicio >= HoraFim) {
       setErrorMessage("Please, end time must be greater than start time");
       return false;
     }
