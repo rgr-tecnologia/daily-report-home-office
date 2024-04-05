@@ -1,6 +1,7 @@
-import { Profile } from "../../../../interfaces/Profile";
+import { Manager } from "../../../../types/Manager";
+import { Profile } from "../../../../types/Profile";
 export interface FormProps {
-    date: Date;
-    manager: Profile;
-    employee: Profile;
+  date: Date;
+  manager: Manager;
+  employee: Profile;
 }

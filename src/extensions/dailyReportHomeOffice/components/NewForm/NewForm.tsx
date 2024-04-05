@@ -9,7 +9,7 @@ import {
   TextField,
 } from "office-ui-fabric-react";
 import { NewFormProps } from "./NewForm.props";
-import { JobItemDto } from "../../../../interfaces/JobItem";
+import { JobItemDto } from "../../../../types/JobItem";
 
 const anchor = new Date(new Date().setHours(0, 0, 0, 0));
 

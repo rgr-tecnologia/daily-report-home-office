@@ -2,7 +2,7 @@ import * as React from "react";
 import { DailyReportHomeOfficeProps } from "./DailyReportHomeOfficeProps";
 import { Stack } from "@fluentui/react";
 import { JobList } from "./JobList/JobList";
-import { JobItemDto } from "../../../interfaces/JobItem";
+import { JobItemDto } from "../../../types/JobItem";
 import {
   DefaultButton,
   Dialog,
@@ -12,7 +12,11 @@ import {
   Text,
   TextField,
 } from "office-ui-fabric-react";
-import { DailyReportDto } from "../../../interfaces/DailyReport";
+import {
+  DailyReport,
+  DailyReportResponse,
+  DailyReportUpdate,
+} from "../../../types/DailyReport";
 import { Form } from "./Form/Form";
 import { NewForm } from "./NewForm/NewForm";
 import styles from "./DailyReportHomeOffice.module.scss";
@@ -21,20 +25,21 @@ export function DailyReportHomeOffice(
   props: DailyReportHomeOfficeProps
 ): JSX.Element {
   const {
-    onSave,
+    onCreate,
+    onUpdate,
     onSaveSecondary,
     onDeleteSecondary,
-    employee,
-    manager,
     isManager,
     isEmployee,
     formData,
     items,
   } = props;
 
-  const { JobDate, Status } = formData;
+  const { JobDate, Employee: employee, Status } = formData;
+  const manager = employee.Gestor;
 
   const baseItem: JobItemDto = {
+    Id: null,
     Title: "",
     Description: "",
     Status: "In review",
@@ -51,7 +56,7 @@ export function DailyReportHomeOffice(
   const [currentItem, setCurrentItem] = React.useState<JobItemDto>(baseItem);
   const [errorMessage, setErrorMessage] = React.useState<string>();
   const [currentFormData, setCurrentFormData] =
-    React.useState<DailyReportDto>(formData);
+    React.useState<DailyReport>(formData);
   const [isDialogHidden, setIsDialogHidden] = React.useState<boolean>(true);
   const [isRejectDialogHidden, setIsRejectDialogHidden] =
     React.useState<boolean>(true);
@@ -108,19 +113,26 @@ export function DailyReportHomeOffice(
   const onAddJobItem = async (jobItem: JobItemDto): Promise<void> => {
     if (!validateJobItem(jobItem)) return;
 
-    let saveFormResponse: DailyReportDto = currentFormData;
-    if (currentFormData.Id === null) {
-      saveFormResponse = await onSave(currentFormData, false);
-      setCurrentFormData(saveFormResponse);
-    }
+    let saveFormResponse: DailyReportResponse = null;
 
+    if (currentFormData.Id === null) {
+      saveFormResponse = await onCreate({
+        EmployeeId: employee.Id,
+        JobDate: JobDate.toISOString(),
+        Status: "Draft",
+      });
+      setCurrentFormData({
+        ...currentFormData,
+        Id: saveFormResponse.Id,
+      });
+    }
     const { HoraInicio, HoraFim } = jobItem;
 
     const itemToAdd: JobItemDto = {
       ...jobItem,
       QuantidadeHoras:
         Math.abs(HoraFim.getTime() - HoraInicio.getTime()) / 1000 / 60 / 60,
-      DailyReportHomeOfficeId: saveFormResponse.Id,
+      DailyReportHomeOfficeId: currentFormData.Id,
     };
 
     const responseSecondary = await onSaveSecondary(itemToAdd);
@@ -157,12 +169,11 @@ export function DailyReportHomeOffice(
 
     if (!formIsValid) return;
 
-    const FormData: DailyReportDto = {
-      ...currentFormData,
+    const data: DailyReportUpdate = {
       Status: "In review",
     };
 
-    await onSave(FormData, true);
+    await onUpdate(currentFormData.Id, data);
   };
 
   const onSaveAndFinish = async (): Promise<void> => {
@@ -176,11 +187,10 @@ export function DailyReportHomeOffice(
       return;
     }
 
-    const FormData: DailyReportDto = {
-      ...currentFormData,
+    const data: DailyReportUpdate = {
       Status: "Reviewed",
     };
-    await onSave(FormData, true);
+    await onUpdate(currentFormData.Id, data);
   };
 
   const opApprove = async (jobItem: JobItemDto): Promise<void> => {

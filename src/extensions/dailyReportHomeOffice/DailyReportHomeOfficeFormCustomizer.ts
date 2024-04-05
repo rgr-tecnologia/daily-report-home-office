@@ -1,17 +1,23 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 
-import { FormDisplayMode, Log } from "@microsoft/sp-core-library";
+import { FormDisplayMode } from "@microsoft/sp-core-library";
 import { BaseFormCustomizer } from "@microsoft/sp-listview-extensibility";
 
 import { DailyReportHomeOffice } from "./components/DailyReportHomeOffice";
 import { DailyReportHomeOfficeProps } from "./components/DailyReportHomeOfficeProps";
 
-import { Profile } from "../../interfaces/Profile";
+import { Profile, ProfileResponse } from "../../types/Profile";
 
 import { SPHttpClient, HttpClientResponse } from "@microsoft/sp-http";
-import { JobItemDto, GetResponseJobItem } from "../../interfaces/JobItem";
-import { DailyReportDto } from "../../interfaces/DailyReport";
+import { JobItemDto, UpdateJobItem } from "../../types/JobItem";
+import {
+  DailyReport,
+  DailyReportCreate,
+  DailyReportResponse,
+  DailyReportUpdate,
+} from "../../types/DailyReport";
+import { Departamento } from "../../types/Departamento";
 
 /**
  * If your form customizer uses the ClientSideComponentProperties JSON input,
@@ -23,30 +29,68 @@ export interface IDailyReportHomeOfficeFormCustomizerProperties {
   sampleText?: string;
 }
 
-const LOG_SOURCE: string = "DailyReportHomeOfficeFormCustomizer";
-
 export default class DailyReportHomeOfficeFormCustomizer extends BaseFormCustomizer<IDailyReportHomeOfficeFormCustomizerProperties> {
-  hierarquiaListId = "1733062b-2634-43fc-8207-42fe20b40ac4";
+  colaboradoresListId = "2511179d-6e7d-4027-b73f-7136363f96f2";
   dailyReportListId = "abe0a217-2715-4450-adc7-841cb33431d4";
   dailyReportItemsListId = "c5f255aa-ed5d-418e-b2af-d7d48ddbf0fb";
+  departamentosListId = "cd8b62cc-eaad-458a-a647-e2ef592d9b26";
 
-  formData: DailyReportDto = {
+  formData: DailyReport = {
     Id: null,
-    EmployeeId: null,
-    ManagerId: null,
+    Employee: null,
     Status: "Draft",
     JobDate: new Date(),
-    ManagerUserProfileId: null,
-    ObservacaoGestor: null,
   };
 
-  employeeProfile: Profile;
-  managerProfile: Profile;
-
-  isEmployee: boolean;
-  isManager: boolean;
+  isEmployee: boolean = true;
+  isManager: boolean = false;
 
   jobItems: JobItemDto[] = [];
+
+  public async getDepartamentoById(id: number): Promise<Departamento[]> {
+    return this.getDataFromList<Departamento>(
+      {
+        Id: id,
+      },
+      this.departamentosListId
+    );
+  }
+
+  public async getProfileByEmail(email: string): Promise<Profile> {
+    const profile = (
+      await this.getDataFromList<ProfileResponse>(
+        {
+          Email: email,
+        },
+        this.colaboradoresListId
+      )
+    )[0];
+
+    const manager = await this.getProfileById(profile.GestorId);
+
+    const departamento = (
+      await this.getDepartamentoById(profile.DepartamentoId)
+    )[0];
+
+    return {
+      ...profile,
+      Gestor: manager,
+      Departamento: departamento,
+    };
+  }
+
+  public async getProfileById(id: number): Promise<ProfileResponse> {
+    const profile = (
+      await this.getDataFromList<ProfileResponse>(
+        {
+          Id: id,
+        },
+        this.colaboradoresListId
+      )
+    )[0];
+
+    return profile;
+  }
 
   public async onInit(): Promise<void> {
     // Add your custom initialization to this method. The framework will wait
@@ -55,49 +99,46 @@ export default class DailyReportHomeOfficeFormCustomizer extends BaseFormCustomi
     const isMemberOfRh = await this.isMemberOfGroup(139);
 
     if (this.displayMode === FormDisplayMode.New) {
-      this.employeeProfile = await this.getDataFromHierarquia({
-        EMAIL_EMPLOYE: currentUserLoginName,
-      });
-      this.managerProfile = await this.getDataFromHierarquia({
-        EMAIL_EMPLOYE: this.employeeProfile.EMAIL_1ST_EVALUATOR,
-      });
-
-      this.formData.EmployeeId = this.employeeProfile.Id;
-      this.formData.ManagerId = this.managerProfile.Id;
-
-      const { Id: ManagerProfileId } = await this.ensureUserByLoginName(
-        this.managerProfile.EMAIL_EMPLOYE
+      this.formData.Employee = await this.getProfileByEmail(
+        currentUserLoginName
       );
-      this.formData.ManagerUserProfileId = ManagerProfileId;
-
-      this.isEmployee = true;
-      this.isManager = false;
     } else {
-      this.formData = await this.getItemsFromMainList(this.context.item.ID);
-      this.jobItems = await this.getItemsFromSecondaryList(this.formData.Id);
+      const dailyReport = (
+        await this.getDataFromList<DailyReportResponse>(
+          {
+            Id: this.context.pageContext.listItem.id,
+          },
+          this.dailyReportListId
+        )
+      )[0];
 
-      this.employeeProfile = await this.getDataFromHierarquia({
-        Id: this.formData.EmployeeId,
-      });
-      this.managerProfile = await this.getDataFromHierarquia({
-        Id: this.formData.ManagerId,
-      });
+      const jobItems = await this.getDataFromList<UpdateJobItem>(
+        {
+          DailyReportHomeOfficeId: this.context.pageContext.listItem.id,
+        },
+        this.dailyReportItemsListId
+      );
 
-      this.formData.EmployeeId = this.employeeProfile.Id;
-      this.formData.ManagerId = this.managerProfile.Id;
+      const employee = await this.getProfileById(dailyReport.EmployeeId);
 
-      this.isEmployee =
-        this.employeeProfile.EMAIL_EMPLOYE === currentUserLoginName;
+      this.formData = {
+        Id: dailyReport.Id,
+        Employee: await this.getProfileByEmail(employee.Email),
+        Status: dailyReport.Status,
+        JobDate: new Date(dailyReport.JobDate),
+      };
+
+      this.jobItems = jobItems.map((item) => ({
+        ...item,
+        HoraInicio: new Date(item.HoraInicio),
+        HoraFim: new Date(item.HoraFim),
+      }));
+
+      this.isEmployee = this.formData.Employee.Email === currentUserLoginName;
       this.isManager =
-        this.managerProfile.EMAIL_EMPLOYE === currentUserLoginName ||
+        this.formData.Employee.Gestor.Email === currentUserLoginName ||
         isMemberOfRh;
     }
-
-    Log.info(
-      LOG_SOURCE,
-      "Activated DailyReportHomeOfficeFormCustomizer with properties:"
-    );
-    Log.info(LOG_SOURCE, JSON.stringify(this.properties, undefined, 2));
     return Promise.resolve();
   }
 
@@ -105,16 +146,14 @@ export default class DailyReportHomeOfficeFormCustomizer extends BaseFormCustomi
     const dailyReportHomeOffice: React.ReactElement<DailyReportHomeOfficeProps> =
       React.createElement(DailyReportHomeOffice, {
         displayMode: this.displayMode,
-        onSave: this.saveOnMainList.bind(this),
+        onCreate: this.createDailyReport.bind(this),
+        onUpdate: this.updateDailyReport.bind(this),
         onSaveSecondary: this.saveOnSecondaryList.bind(this),
         onDeleteSecondary: this.deleteItemFromSecondaryList.bind(this),
-        employee: this.employeeProfile,
-        manager: this.managerProfile,
-        date: this.formData.JobDate,
-        isManager: this.isManager,
-        isEmployee: this.isEmployee,
         formData: this.formData,
         items: this.jobItems,
+        isEmployee: this.isEmployee,
+        isManager: this.isManager,
       });
 
     ReactDOM.render(dailyReportHomeOffice, this.domElement);
@@ -126,42 +165,15 @@ export default class DailyReportHomeOfficeFormCustomizer extends BaseFormCustomi
     super.onDispose();
   }
 
-  /* Método não será necessário, pois não teremos um botão de cancelar
-  private _onClose =  (): void => {
-    // You MUST call this.formClosed() after you close the form.
-    this.formClosed();
-  }*/
+  private async getDataFromList<T>(
+    data: Partial<T>,
+    listId: string
+  ): Promise<T[]> {
+    const query = Object.keys(data)
+      .map((key) => `${key} eq '${data[key as keyof T]}'`)
+      .join(" and ");
 
-  private async ensureUserByLoginName(loginName: string): Promise<Profile> {
-    const response = await this.context.spHttpClient.post(
-      `${this.context.pageContext.site.absoluteUrl}/_api/web/ensureuser`,
-      SPHttpClient.configurations.v1,
-      {
-        body: JSON.stringify({
-          logonName: loginName,
-        }),
-      }
-    );
-
-    return await response.json();
-  }
-
-  private async getDataFromHierarquia(
-    data: Partial<Profile>
-  ): Promise<Profile> {
-    let query = "";
-    if (Object.keys(data).length === 1) {
-      const key = Object.keys(data)[0];
-      query = `${key} eq '${data[key]}'`;
-    } else {
-      query = Object.keys(data).reduce((accumulator, key) => {
-        return `${accumulator} ${key} eq '${data[key]}' and`;
-      }, "");
-    }
-
-    const apiUrl = `${this.getApiUrl()}/_api/web/lists(guid'${
-      this.hierarquiaListId
-    }')/items?$filter=${query}`;
+    const apiUrl = `${this.getApiUrl()}/_api/web/lists(guid'${listId}')/items?$filter=${query}`;
 
     const getDataResponse = await this.getData(apiUrl);
     const responseJson = await getDataResponse.json();
@@ -170,7 +182,7 @@ export default class DailyReportHomeOfficeFormCustomizer extends BaseFormCustomi
       throw Error("Não foi possível localizar registros");
     }
 
-    return responseJson.value[0];
+    return responseJson.value;
   }
 
   private getApiUrl(): string {
@@ -195,56 +207,59 @@ export default class DailyReportHomeOfficeFormCustomizer extends BaseFormCustomi
     return siteGroups;
   }
 
-  private async saveOnMainList(
-    data: DailyReportDto,
-    reload: boolean
-  ): Promise<DailyReportDto> {
-    const { Id, ...dataToSave } = data;
-    let apiUrl = "";
-    let method = "";
-
-    if (Id) {
-      apiUrl = `${this.getApiUrl()}/_api/web/lists(guid'${
+  private async createDailyReport(
+    data: DailyReportCreate
+  ): Promise<DailyReportResponse> {
+    const response = await this.context.spHttpClient.post(
+      `${this.getApiUrl()}/_api/web/lists(guid'${
         this.dailyReportListId
-      }')/items(${Id})`;
-      method = "MERGE";
-    } else {
-      apiUrl = `${this.getApiUrl()}/_api/web/lists(guid'${
-        this.dailyReportListId
-      }')/items`;
-      method = "POST";
-    }
-
-    const response = await this.context.spHttpClient.fetch(
-      apiUrl,
+      }')/items`,
       SPHttpClient.configurations.v1,
       {
-        method: method,
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...data,
+        }),
+      }
+    );
+
+    if (response.ok) {
+      const responseJson = await response.json();
+      return {
+        ...responseJson,
+      };
+    } else {
+      return Promise.reject(response.statusText);
+    }
+  }
+
+  private async updateDailyReport(
+    id: number,
+    data: DailyReportUpdate
+  ): Promise<DailyReportResponse> {
+    const response = await this.context.spHttpClient.fetch(
+      `${this.getApiUrl()}/_api/web/lists(guid'${
+        this.dailyReportListId
+      }')/items(${id})`,
+      SPHttpClient.configurations.v1,
+      {
+        method: "MERGE",
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
           "IF-MATCH": "*",
         },
         body: JSON.stringify({
-          EmployeeId: dataToSave.EmployeeId,
-          ManagerId: dataToSave.ManagerId,
-          Status: dataToSave.Status,
-          JobDate: dataToSave.JobDate,
-          ManagerUserProfileId: dataToSave.ManagerUserProfileId,
+          ...data,
         }),
       }
     );
 
     if (response.ok) {
-      if (reload) {
-        // You MUST call this.formSaved() after you save the form.
-        this.formSaved();
-      } else {
-        const responseJson = await response.json();
-        return {
-          ...responseJson,
-        };
-      }
+      this.formSaved();
     } else {
       return Promise.reject(response.statusText);
     }
@@ -260,7 +275,7 @@ export default class DailyReportHomeOfficeFormCustomizer extends BaseFormCustomi
           this.dailyReportItemsListId
         }')/items`;
 
-    const method = Id ? "MERGE" : "POST";
+    const method = Id !== null ? "MERGE" : "POST";
 
     try {
       const response = await this.context.spHttpClient.post(
@@ -300,51 +315,6 @@ export default class DailyReportHomeOfficeFormCustomizer extends BaseFormCustomi
       (group: { Id: number }) => group.Id === groupId
     );
     return !!group;
-  }
-
-  private async getItemsFromMainList(id: number): Promise<DailyReportDto> {
-    const apiUrl = `${this.getApiUrl()}/_api/web/lists(guid'${
-      this.dailyReportListId
-    }')/items(${id})`;
-
-    const getDataResponse = await this.getData(apiUrl);
-    const responseJson = await getDataResponse.json();
-
-    if (!responseJson) {
-      throw Error("Não foi possível localizar registros");
-    }
-
-    return {
-      Id: responseJson.Id,
-      EmployeeId: responseJson.EmployeeId,
-      ManagerId: responseJson.ManagerId,
-      Status: responseJson.Status,
-      JobDate: new Date(responseJson.JobDate),
-      ManagerUserProfileId: responseJson.ManagerUserProfileId,
-      ObservacaoGestor: responseJson.ObservacaoGestor,
-    };
-  }
-
-  private async getItemsFromSecondaryList(id: number): Promise<JobItemDto[]> {
-    const apiUrl = `${this.getApiUrl()}/_api/web/lists(guid'${
-      this.dailyReportItemsListId
-    }')/items?$filter=DailyReportHomeOfficeId eq ${id}`;
-
-    const getDataResponse = await this.getData(apiUrl);
-    const { value }: { value: GetResponseJobItem[] } =
-      await getDataResponse.json();
-
-    if (value.length === 0) {
-      return [];
-    }
-
-    return value.map((item) => {
-      return {
-        ...item,
-        HoraInicio: new Date(item.HoraInicio),
-        HoraFim: new Date(item.HoraFim),
-      };
-    });
   }
 
   private async deleteItemFromSecondaryList(id: number): Promise<void> {
