@@ -3,7 +3,7 @@
   "solution": {
     "name": "daily-report-home-office-client-side-solution",
     "id": "bc67daff-c44b-4a1b-9f32-52e5ca0d911f",
-    "version": "1.9.2.10",
+    "version": "1.10.0.0",
     "includeClientSideAssets": true,
     "skipFeatureDeployment": true,
     "isDomainIsolated": false,
