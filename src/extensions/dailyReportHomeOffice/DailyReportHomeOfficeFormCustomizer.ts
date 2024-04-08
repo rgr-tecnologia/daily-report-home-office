@@ -178,10 +178,6 @@ export default class DailyReportHomeOfficeFormCustomizer extends BaseFormCustomi
     const getDataResponse = await this.getData(apiUrl);
     const responseJson = await getDataResponse.json();
 
-    if (responseJson.value.length === 0) {
-      throw Error("Não foi possível localizar registros");
-    }
-
     return responseJson.value;
   }
 
