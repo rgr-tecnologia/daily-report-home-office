@@ -120,6 +120,7 @@ export function DailyReportHomeOffice(
         EmployeeId: employee.Id,
         JobDate: JobDate.toISOString(),
         Status: "Draft",
+        ManagerUserProfileId: currentFormData.ManagerUserProfileId,
       });
       setCurrentFormData({
         ...currentFormData,

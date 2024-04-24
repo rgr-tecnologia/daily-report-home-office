@@ -6,12 +6,14 @@ export type DailyReport = {
   Employee: Profile;
   Status: StatusDailyReport;
   JobDate: Date;
+  ManagerUserProfileId: number;
 };
 
 export type DailyReportCreate = {
   EmployeeId: number;
   Status: StatusDailyReport;
   JobDate: string;
+  ManagerUserProfileId: number;
 };
 
 export type DailyReportUpdate = {
@@ -23,4 +25,5 @@ export type DailyReportResponse = {
   EmployeeId: number;
   Status: StatusDailyReport;
   JobDate: string;
+  ManagerUserProfileId: number;
 };
