@@ -40,6 +40,7 @@ export default class DailyReportHomeOfficeFormCustomizer extends BaseFormCustomi
     Employee: null,
     Status: "Draft",
     JobDate: new Date(),
+    ManagerUserProfileId: null,
   };
 
   isEmployee: boolean = true;
@@ -95,13 +96,32 @@ export default class DailyReportHomeOfficeFormCustomizer extends BaseFormCustomi
   public async onInit(): Promise<void> {
     // Add your custom initialization to this method. The framework will wait
     // for the returned promise to resolve before rendering the form.
-    const { loginName: currentUserLoginName } = this.context.pageContext.user;
+    const currentUserLoginName = this.context.pageContext.user.loginName;
     const isMemberOfRh = await this.isMemberOfGroup(139);
 
     if (this.displayMode === FormDisplayMode.New) {
       this.formData.Employee = await this.getProfileByEmail(
         currentUserLoginName
       );
+
+      const managerProfileResponse = await this.context.spHttpClient.post(
+        "https://cjinter.sharepoint.com/sites/newportal/_api/web/ensureuser",
+        SPHttpClient.configurations.v1,
+        {
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            logonName:
+              "i:0#.f|membership|" + this.formData.Employee.Gestor.Email,
+          }),
+        }
+      );
+
+      const managerProfile = await managerProfileResponse.json();
+
+      this.formData.ManagerUserProfileId = managerProfile.Id;
     } else {
       const dailyReport = (
         await this.getDataFromList<DailyReportResponse>(
@@ -121,18 +141,19 @@ export default class DailyReportHomeOfficeFormCustomizer extends BaseFormCustomi
 
       const employee = await this.getProfileById(dailyReport.EmployeeId);
 
-      this.formData = {
-        Id: dailyReport.Id,
-        Employee: await this.getProfileByEmail(employee.Email),
-        Status: dailyReport.Status,
-        JobDate: new Date(dailyReport.JobDate),
-      };
-
       this.jobItems = jobItems.map((item) => ({
         ...item,
         HoraInicio: new Date(item.HoraInicio),
         HoraFim: new Date(item.HoraFim),
       }));
+
+      this.formData = {
+        Id: dailyReport.Id,
+        Employee: await this.getProfileByEmail(employee.Email),
+        Status: dailyReport.Status,
+        JobDate: new Date(dailyReport.JobDate),
+        ManagerUserProfileId: dailyReport.ManagerUserProfileId,
+      };
 
       this.isEmployee = this.formData.Employee.Email === currentUserLoginName;
       this.isManager =
