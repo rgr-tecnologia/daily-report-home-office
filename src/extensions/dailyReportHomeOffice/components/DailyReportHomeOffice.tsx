@@ -133,7 +133,7 @@ export function DailyReportHomeOffice(
       ...jobItem,
       QuantidadeHoras:
         Math.abs(HoraFim.getTime() - HoraInicio.getTime()) / 1000 / 60 / 60,
-      DailyReportHomeOfficeId: currentFormData.Id,
+      DailyReportHomeOfficeId: saveFormResponse.Id,
     };
 
     const responseSecondary = await onSaveSecondary(itemToAdd);
