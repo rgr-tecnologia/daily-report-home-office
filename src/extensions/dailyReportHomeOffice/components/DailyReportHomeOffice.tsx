@@ -113,7 +113,13 @@ export function DailyReportHomeOffice(
   const onAddJobItem = async (jobItem: JobItemDto): Promise<void> => {
     if (!validateJobItem(jobItem)) return;
 
-    let saveFormResponse: DailyReportResponse = null;
+    let saveFormResponse: DailyReportResponse = {
+      Id: currentFormData.Id,
+      EmployeeId: employee.Id,
+      JobDate: JobDate.toISOString(),
+      Status: "Draft",
+      ManagerUserProfileId: currentFormData.ManagerUserProfileId,
+    };
 
     if (currentFormData.Id === null) {
       saveFormResponse = await onCreate({
@@ -133,7 +139,7 @@ export function DailyReportHomeOffice(
       ...jobItem,
       QuantidadeHoras:
         Math.abs(HoraFim.getTime() - HoraInicio.getTime()) / 1000 / 60 / 60,
-      DailyReportHomeOfficeId: currentFormData.Id,
+      DailyReportHomeOfficeId: saveFormResponse.Id,
     };
 
     const responseSecondary = await onSaveSecondary(itemToAdd);
