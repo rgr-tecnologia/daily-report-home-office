@@ -139,7 +139,13 @@ export function JobList(props: JobListProps): JSX.Element {
       key: `column5`,
       name: "Overtime hours",
       minWidth: 100,
-      onRender: (item) => <>{item.QuantidadeHoras.toFixed(2)}</>,
+      onRender: (item) => {
+        const totalMinutes = Math.round(item.QuantidadeHoras * 60);
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+
+        return <>{`${hours}h ${minutes}m`}</>;
+      },
     },
     {
       key: `column6`,
