@@ -7,9 +7,9 @@
       "pageUrl": "https://cjinter.sharepoint.com/sites/newportal/_layouts/15/SPListForm.aspx",
       "formCustomizer": {
         "componentId": "4a7f9032-8e66-421e-bafe-a1e03d0c4fb7",
-        "PageType": 4,
+        "PageType": 8,
         "RootFolder": "/sites/newportal/Lists/DailyReportHomeOffice",
-        "ID": 1344
+        
       }
     },
     "dailyReportHomeOffice_NewForm": {
@@ -26,7 +26,7 @@
         "componentId": "4a7f9032-8e66-421e-bafe-a1e03d0c4fb7",
         "PageType": 6,
         "RootFolder": "/sites/newportal/Lists/DailyReportHomeOffice",
-        "ID": 872
+        
       }
     },
     "dailyReportHomeOffice_ViewForm": {
@@ -35,7 +35,7 @@
         "componentId": "4a7f9032-8e66-421e-bafe-a1e03d0c4fb7",
         "PageType": 4,
         "RootFolder": "/sites/newportal/Lists/DailyReportHomeOffice",
-        "ID": 1278
+        
       }
     }
   }

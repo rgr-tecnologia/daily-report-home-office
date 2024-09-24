@@ -7,6 +7,9 @@ export type DailyReport = {
   Status: StatusDailyReport;
   JobDate: Date;
   ManagerUserProfileId: number;
+  DataRetroativa: boolean;
+  JustificativaRetroativa: string;
+  DataRetroativaTexto: Date | string;
 };
 
 export type DailyReportCreate = {
@@ -14,10 +17,17 @@ export type DailyReportCreate = {
   Status: StatusDailyReport;
   JobDate: string;
   ManagerUserProfileId: number;
+  JustificativaRetroativa: string;
+  DataRetroativa: boolean;
+  DataRetroativaTexto: Date;
 };
 
 export type DailyReportUpdate = {
   Status: StatusDailyReport;
+  DataRetroativa: boolean;
+  JustificativaRetroativa: string;
+  DataRetroativaTexto: Date;
+  
 };
 
 export type DailyReportResponse = {
@@ -26,4 +36,8 @@ export type DailyReportResponse = {
   Status: StatusDailyReport;
   JobDate: string;
   ManagerUserProfileId: number;
+  DataRetroativa: boolean;
+  JustificativaRetroativa: string;
+  DataRetroativaTexto: Date;
+  
 };

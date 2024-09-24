@@ -25,7 +25,14 @@ export function JobList(props: JobListProps): JSX.Element {
   } = props;
 
   const [jobItems, setJobItems] = React.useState<JobItemDto[]>(items);
-
+  const formatarData = (data: any) => {
+    data = new Date(data);
+    const dia = data.getDate().toString().padStart(2, '0');
+    const mes = (data.getMonth() + 1).toString().padStart(2, '0');
+    const ano = data.getFullYear();
+  
+    return `${dia}/${mes}/${ano}`;
+  }
   React.useEffect(() => {
     setJobItems(items);
   }, [items]);
@@ -38,6 +45,9 @@ export function JobList(props: JobListProps): JSX.Element {
         ...item,
         HoraInicio: item.HoraExtra ? item.HoraInicio.toLocaleTimeString() : "",
         HoraFim: item.HoraExtra ? item.HoraFim.toLocaleTimeString() : "",
+        DataRetroativaTexto: item.DataRetroativa ? item?.DataRetroativaTexto : "",
+        JustificativaRetroativa: item?.JustificativaRetroativa,
+        DataRetroativa: item.DataRetroativa
       };
     });
 
@@ -45,7 +55,7 @@ export function JobList(props: JobListProps): JSX.Element {
     {
       key: `column10`,
       name: "Actions",
-      minWidth: 100,
+      minWidth: 75,
       onRender: (item: JobItemAsString) => (
         <ActionsColumn
           isManager={isManager}
@@ -62,7 +72,7 @@ export function JobList(props: JobListProps): JSX.Element {
     {
       key: `column2`,
       name: "Title",
-      minWidth: 100,
+      minWidth: 75,
       onRender: (item) => {
         return (
           <TooltipHost
@@ -77,7 +87,7 @@ export function JobList(props: JobListProps): JSX.Element {
     {
       key: `column3`,
       name: "Description",
-      minWidth: 100,
+      minWidth: 75,
       onRender: (item) => {
         return (
           <TooltipHost
@@ -92,7 +102,7 @@ export function JobList(props: JobListProps): JSX.Element {
     {
       key: `column4`,
       name: "Status",
-      minWidth: 100,
+      minWidth: 75,
       onRender: (item: JobItemAsString) => {
         let style: IStyle = {
           borderRadius: "1rem",
@@ -138,7 +148,7 @@ export function JobList(props: JobListProps): JSX.Element {
     {
       key: `column5`,
       name: "Overtime hours",
-      minWidth: 100,
+      minWidth: 75,
       onRender: (item) => {
         const totalMinutes = Math.round(item.QuantidadeHoras * 60);
         const hours = Math.floor(totalMinutes / 60);
@@ -151,31 +161,31 @@ export function JobList(props: JobListProps): JSX.Element {
       key: `column6`,
       name: "Start time",
       fieldName: "HoraInicio",
-      minWidth: 100,
+      minWidth: 75,
     },
     {
       key: `column7`,
       name: "End time",
       fieldName: "HoraFim",
-      minWidth: 100,
+      minWidth: 75,
     },
     {
       key: `column9`,
       name: "Home office?",
-      fieldName: "HomeOffice",
-      minWidth: 100,
+      fieldName: "",
+      minWidth: 75,
       onRender: ({ HomeOffice }) => <>{HomeOffice ? "Yes" : "No"}</>,
     },
     {
       key: `column9`,
       name: "Overtime?",
-      minWidth: 100,
+      minWidth: 75,
       onRender: ({ HoraExtra }) => <>{HoraExtra ? "Yes" : "No"}</>,
     },
     {
       key: `column10`,
       name: "Manager's note",
-      minWidth: 100,
+      minWidth: 75,
       onRender: (item) => {
         return (
           <TooltipHost
@@ -187,7 +197,47 @@ export function JobList(props: JobListProps): JSX.Element {
         );
       },
     },
+    {
+      key: `column11`,
+      name: "Data Retroativa",
+      minWidth: 75,
+      onRender: (item) => <>{item.DataRetroativa? "Yes" : "No"}</>,
+    },
+    {
+      key: `column12`,
+      name: "Justificativa Retroativa",
+      minWidth: 75,
+      onRender: (item) => {
+        return (
+          <TooltipHost
+            content={item.JustificativaRetroativa}
+            overflowMode={TooltipOverflowMode.Parent}
+          >
+            <Text >{item.JustificativaRetroativa ? item.JustificativaRetroativa.replace(/<(.|\n)*?>/g, ''): ''}</Text>
+          </TooltipHost>
+        );
+      },
+    },
+    {
+      key: `column13`,
+      name: "Data Retroativa Text",
+      fieldName: "Data Retroativa",
+      minWidth: 75,
+      onRender: (item) => {
+        return (
+          <TooltipHost
+            content={item.DataRetroativaTexto}
+            overflowMode={TooltipOverflowMode.Parent}
+          >
+            <Text>{item.DataRetroativaTexto ? formatarData(item.DataRetroativaTexto): ''}</Text>
+          </TooltipHost>
+        );
+      },
+    },
+
+   
   ];
+
 
   return (
     <>

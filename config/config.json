@@ -13,6 +13,7 @@
   },
   "externals": {},
   "localizedResources": {
-    "DailyReportHomeOfficeFormCustomizerStrings": "lib/extensions/dailyReportHomeOffice/loc/{locale}.js"
+    "DailyReportHomeOfficeFormCustomizerStrings": "lib/extensions/dailyReportHomeOffice/loc/{locale}.js",
+    "ControlStrings": "node_modules/@pnp/spfx-controls-react/lib/loc/{locale}.js"
   }
 }

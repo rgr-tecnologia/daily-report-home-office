@@ -11,7 +11,10 @@ export interface CreateJobItem {
   HoraInicio: string;
   HoraFim: string;
   ObservacaoGestor: string;
-}
+  DataRetroativa: boolean;
+  JustificativaRetroativa:string;
+  DataRetroativaTexto: Date;
+} 
 
 export interface UpdateJobItem {
   Id: number;
@@ -25,6 +28,10 @@ export interface UpdateJobItem {
   HoraInicio: string;
   HoraFim: string;
   ObservacaoGestor: string;
+  DataRetroativa: boolean;
+  JustificativaRetroativa: string;
+  DataRetroativaTexto: Date;
+  
 }
 
 export interface JobItemDto {
@@ -39,4 +46,8 @@ export interface JobItemDto {
   HoraInicio: Date;
   HoraFim: Date;
   ObservacaoGestor: string;
+  DataRetroativa: boolean;
+  JustificativaRetroativa:string;
+  DataRetroativaTexto: Date | string;
+  
 }

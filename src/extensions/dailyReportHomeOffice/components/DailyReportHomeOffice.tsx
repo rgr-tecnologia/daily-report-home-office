@@ -11,6 +11,7 @@ import {
   PrimaryButton,
   Text,
   TextField,
+  Checkbox,
 } from "office-ui-fabric-react";
 import {
   DailyReport,
@@ -20,6 +21,7 @@ import {
 import { Form } from "./Form/Form";
 import { NewForm } from "./NewForm/NewForm";
 import styles from "./DailyReportHomeOffice.module.scss";
+import { DateTimePicker, DateConvention } from '@pnp/spfx-controls-react/lib/DateTimePicker';
 
 export function DailyReportHomeOffice(
   props: DailyReportHomeOfficeProps
@@ -35,7 +37,7 @@ export function DailyReportHomeOffice(
     items,
   } = props;
 
-  const { JobDate, Employee: employee, Status } = formData;
+  const { JobDate, Employee: employee, Status, DataRetroativa, JustificativaRetroativa, DataRetroativaTexto } = formData;
   const manager = employee.Gestor;
 
   const baseItem: JobItemDto = {
@@ -50,6 +52,10 @@ export function DailyReportHomeOffice(
     QuantidadeHoras: 0,
     HomeOffice: false,
     ObservacaoGestor: null,
+    JustificativaRetroativa: JustificativaRetroativa,
+    DataRetroativa: DataRetroativa,
+    DataRetroativaTexto: DataRetroativaTexto || new Date(),
+    
   };
 
   const [jobItems, setJobItems] = React.useState<JobItemDto[]>(items);
@@ -66,6 +72,16 @@ export function DailyReportHomeOffice(
   const [itemToReject, setItemToReject] = React.useState<JobItemDto>();
   const [itemToApprove, setItemToApprove] = React.useState<JobItemDto>();
   const [observacaoGestor, setObservacaoGestor] = React.useState<string>();
+  const [dataRetroativa, setDataRetroativa] = React.useState<boolean>(DataRetroativa || false);
+  const [justificativaRetroativa, setJustificativaRetroativa] = React.useState<string>(JustificativaRetroativa || "");
+  const [dataRetroativaTexto, setDataRetroativaTexto] = React.useState<Date | any>(DataRetroativaTexto || new Date());
+  
+  const formatDate = (date: Date): string => {
+    return date ? date.toLocaleDateString('pt-BR') : '';
+  };
+  const dataAtual = new Date();
+  const dataLimite = new Date();
+  dataLimite.setDate(dataAtual.getDate() - 3); // Subtrai 3 dias da data atual
 
   const findIndex = (
     array: JobItemDto[],
@@ -111,42 +127,56 @@ export function DailyReportHomeOffice(
   };
 
   const onAddJobItem = async (jobItem: JobItemDto): Promise<void> => {
-    if (!validateJobItem(jobItem)) return;
+  if (!validateJobItem(jobItem)) return;
 
-    let saveFormResponse: DailyReportResponse = {
-      Id: currentFormData.Id,
+  // Definir valores padrão se a data retroativa não estiver marcada
+  const retroativaDataTexto = dataRetroativa ? dataRetroativaTexto : new Date();
+  const retroativaJustificativa = dataRetroativa ? justificativaRetroativa : null;
+
+  let saveFormResponse: DailyReportResponse = {
+    Id: currentFormData.Id,
+    EmployeeId: employee.Id,
+    JobDate: JobDate.toISOString(),
+    Status: "Draft",
+    ManagerUserProfileId: currentFormData.ManagerUserProfileId,
+    DataRetroativa: dataRetroativa,
+    JustificativaRetroativa: retroativaJustificativa,
+    DataRetroativaTexto: retroativaDataTexto || null, // Certifique-se de passar `null` ou um valor do tipo `Date`
+  };
+
+  if (currentFormData.Id === null) {
+    saveFormResponse = await onCreate({
       EmployeeId: employee.Id,
       JobDate: JobDate.toISOString(),
       Status: "Draft",
       ManagerUserProfileId: currentFormData.ManagerUserProfileId,
-    };
+      DataRetroativa: dataRetroativa,
+      JustificativaRetroativa: retroativaJustificativa,
+      DataRetroativaTexto: retroativaDataTexto || null, // Passar `null` ou `Date`
+    });
+    setCurrentFormData({
+      ...currentFormData,
+      Id: saveFormResponse.Id,
+    });
+  }
 
-    if (currentFormData.Id === null) {
-      saveFormResponse = await onCreate({
-        EmployeeId: employee.Id,
-        JobDate: JobDate.toISOString(),
-        Status: "Draft",
-        ManagerUserProfileId: currentFormData.ManagerUserProfileId,
-      });
-      setCurrentFormData({
-        ...currentFormData,
-        Id: saveFormResponse.Id,
-      });
-    }
-    const { HoraInicio, HoraFim } = jobItem;
+  const { HoraInicio, HoraFim } = jobItem;
 
-    const itemToAdd: JobItemDto = {
-      ...jobItem,
-      QuantidadeHoras:
-        Math.abs(HoraFim.getTime() - HoraInicio.getTime()) / 1000 / 60 / 60,
-      DailyReportHomeOfficeId: saveFormResponse.Id,
-    };
-
-    const responseSecondary = await onSaveSecondary(itemToAdd);
-
-    setJobItems([...jobItems, responseSecondary]);
-    setCurrentItem({ ...baseItem });
+  const itemToAdd: JobItemDto = {
+    ...jobItem,
+    QuantidadeHoras:
+      Math.abs(HoraFim.getTime() - HoraInicio.getTime()) / 1000 / 60 / 60,
+    DailyReportHomeOfficeId: saveFormResponse.Id,
+    DataRetroativa: dataRetroativa,
+    JustificativaRetroativa: retroativaJustificativa,
+    DataRetroativaTexto: retroativaDataTexto || null, // Passar `null` ou `Date`
   };
+
+  const responseSecondary = await onSaveSecondary(itemToAdd);
+
+  setJobItems([...jobItems, responseSecondary]);
+  setCurrentItem({ ...baseItem });
+};
 
   const onUpdateJobItem = async (jobItem: JobItemDto): Promise<void> => {
     if (!validateJobItem(jobItem)) return;
@@ -156,6 +186,9 @@ export function DailyReportHomeOffice(
       ...jobItem,
       QuantidadeHoras:
         Math.abs(HoraFim.getTime() - HoraInicio.getTime()) / 1000 / 60 / 60,
+        DataRetroativa: dataRetroativa,
+        JustificativaRetroativa: justificativaRetroativa,
+        DataRetroativaTexto: dataRetroativaTexto || null,
     };
 
     const index = findIndex(
@@ -178,6 +211,10 @@ export function DailyReportHomeOffice(
 
     const data: DailyReportUpdate = {
       Status: "In review",
+      DataRetroativa: dataRetroativa,
+      JustificativaRetroativa: justificativaRetroativa,
+      DataRetroativaTexto: dataRetroativaTexto || null,
+      
     };
 
     await onUpdate(currentFormData.Id, data);
@@ -196,6 +233,9 @@ export function DailyReportHomeOffice(
 
     const data: DailyReportUpdate = {
       Status: "Reviewed",
+      DataRetroativa: dataRetroativa,
+      JustificativaRetroativa: justificativaRetroativa,
+      DataRetroativaTexto: dataRetroativaTexto || null,
     };
     await onUpdate(currentFormData.Id, data);
   };
@@ -291,7 +331,55 @@ export function DailyReportHomeOffice(
             benefit for the next week.{" "}
           </Text>
           <Form date={JobDate} employee={employee} manager={manager} />
+          
+          <Stack tokens={{ childrenGap: "s1" }} styles={{ root: { width: 'auto' } }}>
+            <Checkbox
+  label="Data Retroativa"
+  checked={dataRetroativa}
+  onChange={(e, isChecked) => {
+    setDataRetroativa(isChecked || false);
 
+    // Clear dataRetroativaTexto and justificativaRetroativa if unchecking the checkbox
+    if (!isChecked) {
+      setDataRetroativaTexto(new Date()); // Define como `undefined` ao invés de uma nova data
+      setJustificativaRetroativa("");
+    }
+  }}
+  styles={{ 
+    label: { 
+      fontWeight: 'bold'
+    } 
+  }}
+/>
+
+{dataRetroativa && (
+  <>
+    <div style={{ marginTop: '10px', maxWidth: '200px' }}>
+      <DateTimePicker
+        disabled={!dataRetroativa}
+        minDate={dataLimite}
+        maxDate={dataAtual}
+        dateConvention={DateConvention.Date}
+        value={dataRetroativaTexto ? new Date(dataRetroativaTexto) : new Date()}
+        onChange={(newValue) => setDataRetroativaTexto(newValue || new Date())}
+        formatDate={formatDate}
+      />
+    </div>  
+    <TextField
+      label="Justificativa Retroativa"
+      multiline
+      value={justificativaRetroativa ? justificativaRetroativa.replace(/<(.|\n)*?>/g, ''): ''}
+      onChange={(event, newValue) => setJustificativaRetroativa(newValue || "")} // Garanta que o valor seja uma string válida
+      styles={{ 
+        root: { 
+          marginTop: '10px',
+        }
+      }}
+    />
+  </>
+)}
+          </Stack>
+        
           <Text style={{ color: "red" }}>{errorMessage}</Text>
           {(isEmployee && formData.Status === "Draft" && (
             <>
@@ -392,6 +480,7 @@ export function DailyReportHomeOffice(
           multiline={true}
           value={observacaoGestor}
           onChange={(event, newValue) => setObservacaoGestor(newValue)}
+          styles={{ root: { marginTop: '10px', maxWidth: '300px' } }} // Limita a largura
         />
         <PrimaryButton
           onClick={async () => {
@@ -422,6 +511,7 @@ export function DailyReportHomeOffice(
           multiline={true}
           value={observacaoGestor}
           onChange={(event, newValue) => setObservacaoGestor(newValue)}
+          styles={{ root: { marginTop: '10px', maxWidth: '300px' } }} // Limita a largura
         />
         <PrimaryButton
           onClick={async () => {

@@ -41,6 +41,9 @@ export default class DailyReportHomeOfficeFormCustomizer extends BaseFormCustomi
     Status: "Draft",
     JobDate: new Date(),
     ManagerUserProfileId: null,
+    DataRetroativa: false, // Novo campo com valor padrão
+    JustificativaRetroativa: null,
+    DataRetroativaTexto: null,
   };
 
   isEmployee: boolean = true;
@@ -145,6 +148,9 @@ export default class DailyReportHomeOfficeFormCustomizer extends BaseFormCustomi
         ...item,
         HoraInicio: new Date(item.HoraInicio),
         HoraFim: new Date(item.HoraFim),
+        DataRetroativa: item.DataRetroativa, // Inclua o novo campo
+        JustificativaRetroativa: item.JustificativaRetroativa,
+        DataRetroativaTexto: item.DataRetroativaTexto,
       }));
 
       this.formData = {
@@ -153,7 +159,12 @@ export default class DailyReportHomeOfficeFormCustomizer extends BaseFormCustomi
         Status: dailyReport.Status,
         JobDate: new Date(dailyReport.JobDate),
         ManagerUserProfileId: dailyReport.ManagerUserProfileId,
+        DataRetroativa: dailyReport.DataRetroativa, // Inclua o novo campo
+        JustificativaRetroativa: dailyReport.JustificativaRetroativa,
+        DataRetroativaTexto: dailyReport.DataRetroativaTexto,
       };
+
+      console.log("this.formData:::>>>",this.formData);
 
       this.isEmployee = this.formData.Employee.Email === currentUserLoginName;
       this.isManager =
@@ -228,9 +239,7 @@ export default class DailyReportHomeOfficeFormCustomizer extends BaseFormCustomi
     data: DailyReportCreate
   ): Promise<DailyReportResponse> {
     const response = await this.context.spHttpClient.post(
-      `${this.getApiUrl()}/_api/web/lists(guid'${
-        this.dailyReportListId
-      }')/items`,
+      `${this.getApiUrl()}/_api/web/lists(guid'${this.dailyReportListId}')/items`,
       SPHttpClient.configurations.v1,
       {
         headers: {
@@ -239,6 +248,9 @@ export default class DailyReportHomeOfficeFormCustomizer extends BaseFormCustomi
         },
         body: JSON.stringify({
           ...data,
+          DataRetroativa: data.DataRetroativa, // Inclua o novo campo
+          DataRetroativaTexto: data?.DataRetroativaTexto,
+          JustificativaRetroativa: data?.JustificativaRetroativa,
         }),
       }
     );
@@ -258,9 +270,7 @@ export default class DailyReportHomeOfficeFormCustomizer extends BaseFormCustomi
     data: DailyReportUpdate
   ): Promise<DailyReportResponse> {
     const response = await this.context.spHttpClient.fetch(
-      `${this.getApiUrl()}/_api/web/lists(guid'${
-        this.dailyReportListId
-      }')/items(${id})`,
+      `${this.getApiUrl()}/_api/web/lists(guid'${this.dailyReportListId}')/items(${id})`,
       SPHttpClient.configurations.v1,
       {
         method: "MERGE",
@@ -271,6 +281,9 @@ export default class DailyReportHomeOfficeFormCustomizer extends BaseFormCustomi
         },
         body: JSON.stringify({
           ...data,
+          DataRetroativa: data.DataRetroativa, // Inclua o novo campo
+          DataRetroativaTexto: data?.DataRetroativaTexto,
+          JustificativaRetroativa: data?.JustificativaRetroativa,
         }),
       }
     );
@@ -285,12 +298,8 @@ export default class DailyReportHomeOfficeFormCustomizer extends BaseFormCustomi
   private async saveOnSecondaryList(data: JobItemDto): Promise<JobItemDto> {
     const { Id, ...dataToSave } = data;
     const apiUrl = Id
-      ? `${this.getApiUrl()}/_api/web/lists(guid'${
-          this.dailyReportItemsListId
-        }')/items(${Id})`
-      : `${this.getApiUrl()}/_api/web/lists(guid'${
-          this.dailyReportItemsListId
-        }')/items`;
+      ? `${this.getApiUrl()}/_api/web/lists(guid'${this.dailyReportItemsListId}')/items(${Id})`
+      : `${this.getApiUrl()}/_api/web/lists(guid'${this.dailyReportItemsListId}')/items`;
 
     const method = Id !== null ? "MERGE" : "POST";
 
@@ -335,9 +344,7 @@ export default class DailyReportHomeOfficeFormCustomizer extends BaseFormCustomi
   }
 
   private async deleteItemFromSecondaryList(id: number): Promise<void> {
-    const apiUrl = `${this.getApiUrl()}/_api/web/lists(guid'${
-      this.dailyReportItemsListId
-    }')/items(${id})`;
+    const apiUrl = `${this.getApiUrl()}/_api/web/lists(guid'${this.dailyReportItemsListId}')/items(${id})`;
 
     const response = await this.context.spHttpClient.fetch(
       apiUrl,
