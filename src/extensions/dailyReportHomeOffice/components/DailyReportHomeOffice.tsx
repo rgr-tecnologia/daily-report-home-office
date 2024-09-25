@@ -130,7 +130,7 @@ export function DailyReportHomeOffice(
   if (!validateJobItem(jobItem)) return;
 
   // Definir valores padrão se a data retroativa não estiver marcada
-  const retroativaDataTexto = dataRetroativa ? dataRetroativaTexto : new Date();
+  const retroativaDataTexto = dataRetroativa ? dataRetroativaTexto : null;
   const retroativaJustificativa = dataRetroativa ? justificativaRetroativa : null;
 
   let saveFormResponse: DailyReportResponse = {
@@ -206,6 +206,7 @@ export function DailyReportHomeOffice(
 
   const onSaveAndSend = async (): Promise<void> => {
     const formIsValid = validateForm();
+    const retroativaDataTexto = dataRetroativa ? dataRetroativaTexto : null;
 
     if (!formIsValid) return;
 
@@ -213,7 +214,7 @@ export function DailyReportHomeOffice(
       Status: "In review",
       DataRetroativa: dataRetroativa,
       JustificativaRetroativa: justificativaRetroativa,
-      DataRetroativaTexto: dataRetroativaTexto || null,
+      DataRetroativaTexto: retroativaDataTexto || null,
       
     };
 
@@ -221,6 +222,7 @@ export function DailyReportHomeOffice(
   };
 
   const onSaveAndFinish = async (): Promise<void> => {
+    const retroativaDataTexto = dataRetroativa ? dataRetroativaTexto : null;
     const canSaveAndFinish = jobItems.reduce(
       (acc, item) => acc && !(item.Status === "In review"),
       true
@@ -235,7 +237,7 @@ export function DailyReportHomeOffice(
       Status: "Reviewed",
       DataRetroativa: dataRetroativa,
       JustificativaRetroativa: justificativaRetroativa,
-      DataRetroativaTexto: dataRetroativaTexto || null,
+      DataRetroativaTexto: retroativaDataTexto || null,
     };
     await onUpdate(currentFormData.Id, data);
   };
@@ -333,26 +335,27 @@ export function DailyReportHomeOffice(
           <Form date={JobDate} employee={employee} manager={manager} />
           
           <Stack tokens={{ childrenGap: "s1" }} styles={{ root: { width: 'auto' } }}>
+          {(formData.Status !== "In review" && formData.Status !== "Reviewed") && (
             <Checkbox
-  label="Data Retroativa"
-  checked={dataRetroativa}
-  onChange={(e, isChecked) => {
-    setDataRetroativa(isChecked || false);
+              label="Data Retroativa"
+              checked={dataRetroativa}
+              onChange={(e, isChecked) => {
+                setDataRetroativa(isChecked || false);
 
-    // Clear dataRetroativaTexto and justificativaRetroativa if unchecking the checkbox
-    if (!isChecked) {
-      setDataRetroativaTexto(new Date()); // Define como `undefined` ao invés de uma nova data
-      setJustificativaRetroativa("");
-    }
-  }}
-  styles={{ 
-    label: { 
-      fontWeight: 'bold'
-    } 
-  }}
-/>
+                // Clear dataRetroativaTexto and justificativaRetroativa if unchecking the checkbox
+                if (!isChecked) {
+                  setDataRetroativaTexto(new Date()); // Define como `undefined` ao invés de uma nova data
+                  setJustificativaRetroativa("");
+                }
+              }}
+              styles={{ 
+                label: { 
+                  fontWeight: 'bold'
+                } 
+              }}
+            />)}
 
-{dataRetroativa && (
+{(formData.Status !== "In review"  && formData.Status !== "Reviewed"  &&  dataRetroativa) &&  (
   <>
     <div style={{ marginTop: '10px', maxWidth: '200px' }}>
       <DateTimePicker
