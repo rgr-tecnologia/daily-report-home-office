@@ -36,7 +36,6 @@ export function DailyReportHomeOffice(
     formData,
     items,
   } = props;
-
   const { JobDate, Employee: employee, Status, DataRetroativa, JustificativaRetroativa, DataRetroativaTexto } = formData;
   const manager = employee.Gestor;
 
@@ -57,7 +56,16 @@ export function DailyReportHomeOffice(
     DataRetroativaTexto: DataRetroativaTexto || new Date(),
     
   };
+  
+  const subDateDays = (days: number) => {
+    const dataAtual = new Date();
 
+    // Subtrai um dia (em milissegundos)
+    dataAtual.setDate(dataAtual.getDate() - days);
+
+    // Formata a data para o formato desejado (ex: dd/mm/yyyy)
+    return dataAtual;
+  }
   const [jobItems, setJobItems] = React.useState<JobItemDto[]>(items);
   const [currentItem, setCurrentItem] = React.useState<JobItemDto>(baseItem);
   const [errorMessage, setErrorMessage] = React.useState<string>();
@@ -74,7 +82,8 @@ export function DailyReportHomeOffice(
   const [observacaoGestor, setObservacaoGestor] = React.useState<string>();
   const [dataRetroativa, setDataRetroativa] = React.useState<boolean>(DataRetroativa || false);
   const [justificativaRetroativa, setJustificativaRetroativa] = React.useState<string>(JustificativaRetroativa || "");
-  const [dataRetroativaTexto, setDataRetroativaTexto] = React.useState<Date | any>(DataRetroativaTexto || new Date());
+  const [dataRetroativaTexto, setDataRetroativaTexto] = React.useState<Date | any>(DataRetroativaTexto || subDateDays(1));
+  const [isRetroativaCreated, setIsRetroativaCreated] = React.useState<boolean>((JustificativaRetroativa != null));
   
   const formatDate = (date: Date): string => {
     return date ? date.toLocaleDateString('pt-BR') : '';
@@ -132,7 +141,9 @@ export function DailyReportHomeOffice(
   // Definir valores padrão se a data retroativa não estiver marcada
   const retroativaDataTexto = dataRetroativa ? dataRetroativaTexto : null;
   const retroativaJustificativa = dataRetroativa ? justificativaRetroativa : null;
-
+  if (dataRetroativa && !isRetroativaCreated) {
+    setIsRetroativaCreated(true);
+  }
   let saveFormResponse: DailyReportResponse = {
     Id: currentFormData.Id,
     EmployeeId: employee.Id,
@@ -339,6 +350,7 @@ export function DailyReportHomeOffice(
             <Checkbox
               label="Data Retroativa"
               checked={dataRetroativa}
+              disabled={isRetroativaCreated}
               onChange={(e, isChecked) => {
                 setDataRetroativa(isChecked || false);
 
@@ -347,6 +359,7 @@ export function DailyReportHomeOffice(
                   setDataRetroativaTexto(new Date()); // Define como `undefined` ao invés de uma nova data
                   setJustificativaRetroativa("");
                 }
+                
               }}
               styles={{ 
                 label: { 
@@ -359,17 +372,18 @@ export function DailyReportHomeOffice(
   <>
     <div style={{ marginTop: '10px', maxWidth: '200px' }}>
       <DateTimePicker
-        disabled={!dataRetroativa}
+        disabled={isRetroativaCreated}
         minDate={dataLimite}
-        maxDate={dataAtual}
+        maxDate={subDateDays(1)}
         dateConvention={DateConvention.Date}
-        value={dataRetroativaTexto ? new Date(dataRetroativaTexto) : new Date()}
+        value={dataRetroativaTexto ? new Date(dataRetroativaTexto) : subDateDays(1)}
         onChange={(newValue) => setDataRetroativaTexto(newValue || new Date())}
         formatDate={formatDate}
       />
     </div>  
     <TextField
       label="Justificativa Retroativa"
+      disabled={isRetroativaCreated}
       multiline
       value={justificativaRetroativa ? justificativaRetroativa.replace(/<(.|\n)*?>/g, ''): ''}
       onChange={(event, newValue) => setJustificativaRetroativa(newValue || "")} // Garanta que o valor seja uma string válida
